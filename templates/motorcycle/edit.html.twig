@@ -1,0 +1,65 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Edit Motorcycle | RideGo{% endblock %}
+
+{% block body %}
+
+<div class="page-header">
+    <div>
+        <h1>Edit Motorcycle</h1>
+        <p>Update motorcycle details.</p>
+    </div>
+</div>
+
+<div class="form-container">
+
+    <form>
+
+        <div class="form-group">
+            <label>Motorcycle Name</label>
+            <input type="text" value="Honda Click 125">
+        </div>
+
+        <div class="form-group">
+            <label>Type</label>
+            <input type="text" value="Scooter">
+        </div>
+
+        <div class="form-group">
+            <label>Price Per Day</label>
+            <input type="number" value="500">
+        </div>
+
+        <div class="form-group">
+            <label>Status</label>
+
+            <select>
+                <option selected>Available</option>
+                <option>Rented</option>
+                <option>Maintenance</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Motorcycle Image</label>
+            <input type="file">
+        </div>
+
+        <div class="form-actions">
+
+            <a href="{{ path('admin_motorcycles') }}"
+               class="cancel-btn">
+                Cancel
+            </a>
+
+            <button type="submit" class="save-btn">
+                Update Motorcycle
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

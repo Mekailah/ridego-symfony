@@ -1,0 +1,66 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Motorcycles | RideGo{% endblock %}
+
+{% block body %}
+
+<div class="page-header">
+    <div>
+        <h1>Motorcycle Management</h1>
+        <p>Manage motorcycles available for rental.</p>
+    </div>
+
+    <a href="{{ path('admin_motorcycle_new') }}" class="add-btn">
+        + Add Motorcycle
+    </a>
+</div>
+
+<div class="table-container">
+
+    <table>
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Motorcycle</th>
+                <th>Type</th>
+                <th>Price / Day</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr>
+                <td>
+                    <div class="motorcycle-image">
+                        No Image
+                    </div>
+                </td>
+
+                <td>Honda Click 125</td>
+
+                <td>Scooter</td>
+
+                <td>₱500</td>
+
+                <td>
+                    <span class="status available">
+                        Available
+                    </span>
+                </td>
+
+                <td>
+                    <a href="{{ path('admin_motorcycle_edit', {'id': 1}) }}"
+                    class="edit-btn"> Edit </a>
+                    <a href="#" class="delete-btn">Delete</a>
+                </td>
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}
