@@ -1,0 +1,59 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Add Booking | RideGo{% endblock %}
+
+{% block body %}
+
+<div class="page-header">
+    <div>
+        <h1>Add Booking</h1>
+        <p>Create a new motorcycle rental booking.</p>
+    </div>
+</div>
+
+<div class="form-container">
+
+    {{ form_start(form) }}
+
+        <div class="form-group">
+            {{ form_label(form.customerName, 'Customer Name') }}
+            {{ form_widget(form.customerName) }}
+            {{ form_errors(form.customerName) }}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(form.motorcycleName, 'Motorcycle') }}
+            {{ form_widget(form.motorcycleName) }}
+            {{ form_errors(form.motorcycleName) }}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(form.pickupDate, 'Pick-up Date') }}
+            {{ form_widget(form.pickupDate) }}
+            {{ form_errors(form.pickupDate) }}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(form.returnDate, 'Return Date') }}
+            {{ form_widget(form.returnDate) }}
+            {{ form_errors(form.returnDate) }}
+        </div>
+
+        <div class="form-actions">
+
+            <a href="{{ path('admin_bookings') }}"
+               class="cancel-btn">
+                Cancel
+            </a>
+
+            <button type="submit" class="save-btn">
+                Save Booking
+            </button>
+
+        </div>
+
+    {{ form_end(form) }}
+
+</div>
+
+{% endblock %}

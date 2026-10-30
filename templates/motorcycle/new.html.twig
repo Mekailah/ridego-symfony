@@ -13,36 +13,36 @@
 
 <div class="form-container">
 
-    <form>
+    {{ form_start(form) }}
 
         <div class="form-group">
-            <label>Motorcycle Name</label>
-            <input type="text" placeholder="Honda Click 125">
+            {{ form_label(form.name, 'Motorcycle Name') }}
+            {{ form_widget(form.name) }}
+            {{ form_errors(form.name) }}
         </div>
 
         <div class="form-group">
-            <label>Type</label>
-            <input type="text" placeholder="Scooter">
+            {{ form_label(form.pricePerDay, 'Price Per Day') }}
+            {{ form_widget(form.pricePerDay) }}
+            {{ form_errors(form.pricePerDay) }}
         </div>
 
         <div class="form-group">
-            <label>Price Per Day</label>
-            <input type="number" placeholder="500">
+            {{ form_label(form.totalUnits, 'Total Units') }}
+            {{ form_widget(form.totalUnits) }}
+            {{ form_errors(form.totalUnits) }}
         </div>
 
         <div class="form-group">
-            <label>Status</label>
-
-            <select>
-                <option>Available</option>
-                <option>Rented</option>
-                <option>Maintenance</option>
-            </select>
+            {{ form_label(form.availableUnits, 'Available Units') }}
+            {{ form_widget(form.availableUnits) }}
+            {{ form_errors(form.availableUnits) }}
         </div>
 
         <div class="form-group">
-            <label>Motorcycle Image</label>
-            <input type="file">
+            {{ form_label(form.image, 'Image') }}
+            {{ form_widget(form.image) }}
+            {{ form_errors(form.image) }}
         </div>
 
         <div class="form-actions">
@@ -52,14 +52,13 @@
                 Cancel
             </a>
 
-            <button type="submit"
-                    class="save-btn">
+            <button type="submit" class="save-btn">
                 Save Motorcycle
             </button>
 
         </div>
 
-    </form>
+    {{ form_end(form) }}
 
 </div>
 

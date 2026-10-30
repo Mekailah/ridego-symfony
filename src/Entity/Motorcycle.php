@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\MotorcycleRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: MotorcycleRepository::class)]
 class Motorcycle
@@ -19,11 +20,29 @@ class Motorcycle
     #[ORM\Column]
     private ?int $pricePerDay = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $status = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $image = null;
+
+    #[ORM\Column]
+    #[Assert\GreaterThanOrEqual(
+        value: 0,
+        message: 'Total units cannot be negative.'
+    )]
+    private ?int $totalUnits = null;
+
+    #[ORM\Column]
+    #[Assert\GreaterThanOrEqual(
+        value: 0,
+        message: 'Available units cannot be negative.'
+    )]
+    #[Assert\LessThanOrEqual(
+        propertyPath: 'totalUnits',
+        message: 'Available units cannot be greater than total units.'
+    )]
+    private ?int $availableUnits = null;
 
     public function getId(): ?int
     {
@@ -53,11 +72,11 @@ class Motorcycle
 
         return $this;
     }
-    
+
     public function getStatus(): ?string
-    {
-        return $this->status;
-    }
+{
+    return $this->status;
+}
 
     public function setStatus(string $status): static
     {
@@ -74,6 +93,30 @@ class Motorcycle
     public function setImage(?string $image): static
     {
         $this->image = $image;
+
+        return $this;
+    }
+
+    public function getTotalUnits(): ?int
+    {
+        return $this->totalUnits;
+    }
+
+    public function setTotalUnits(int $totalUnits): static
+    {
+        $this->totalUnits = $totalUnits;
+
+        return $this;
+    }
+
+    public function getAvailableUnits(): ?int
+    {
+        return $this->availableUnits;
+    }
+
+    public function setAvailableUnits(int $availableUnits): static
+    {
+        $this->availableUnits = $availableUnits;
 
         return $this;
     }

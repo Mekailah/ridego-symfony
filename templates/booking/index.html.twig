@@ -1,0 +1,146 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Bookings | RideGo{% endblock %}
+
+{% block body %}
+
+<div class="page-header">
+    <div>
+        <h1>Booking Management</h1>
+        <p>Manage motorcycle bookings and returns.</p>
+    </div>
+
+    <a href="{{ path('admin_booking_new') }}" class="add-btn">
+        + Add Booking
+    </a>
+</div>
+
+<div class="table-container">
+
+    <table>
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Motorcycle</th>
+                <th>Pick-up Date</th>
+                <th>Return Date</th>
+                <th>Status</th>
+                <th>Returned</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+        {% for booking in bookings %}
+
+            <tr>
+                <td>{{ booking.customerName }}</td>
+
+                <td>{{ booking.motorcycleName }}</td>
+
+                <td>{{ booking.pickupDate|date('M d, Y') }}</td>
+
+                <td>{{ booking.returnDate|date('M d, Y') }}</td>
+
+                <td>
+                    {% if booking.status == 'Pending' %}
+                        <span class="status pending">
+                            Pending
+                        </span>
+
+                    {% elseif booking.status == 'Confirmed' %}
+                        <span class="status confirmed">
+                            Confirmed
+                        </span>
+
+                    {% elseif booking.status == 'Returned' %}
+                        <span class="status available">
+                            Returned
+                        </span>
+
+                    {% else %}
+                        {{ booking.status }}
+                    {% endif %}
+                </td>
+
+                <td>
+                    {% if booking.returned %}
+                        Yes
+                    {% else %}
+                        No
+                    {% endif %}
+                </td>
+
+                <td>
+
+                    {% if booking.status == 'Pending' %}
+
+                        <form
+                            method="post"
+                            action="{{ path('admin_booking_confirm', {'id': booking.id}) }}"
+                            style="margin: 0;"
+                        >
+                            <input
+                                type="hidden"
+                                name="_token"
+                                value="{{ csrf_token('confirm' ~ booking.id) }}"
+                            >
+
+                            <button
+                                type="submit"
+                                class="confirm-btn"
+                            >
+                                Confirm
+                            </button>
+                        </form>
+
+                    {% elseif booking.status == 'Confirmed' and not booking.returned %}
+
+                        <form
+                            method="post"
+                            action="{{ path('admin_booking_return', {'id': booking.id}) }}"
+                            style="margin: 0;"
+                        >
+                            <input
+                                type="hidden"
+                                name="_token"
+                                value="{{ csrf_token('return' ~ booking.id) }}"
+                            >
+
+                            <button
+                                type="submit"
+                                class="return-btn"
+                            >
+                                Mark as Returned
+                            </button>
+                        </form>
+
+                    {% elseif booking.returned %}
+
+                        <span class="status available">
+                            Returned
+                        </span>
+
+                    {% endif %}
+
+                </td>
+            </tr>
+
+        {% else %}
+
+            <tr>
+                <td colspan="7">
+                    No bookings found.
+                </td>
+            </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

@@ -16,15 +16,9 @@ class MotorcycleType extends AbstractType
     {
         $builder
             ->add('name', TextType::class)
-            ->add('type', TextType::class)
             ->add('pricePerDay', IntegerType::class)
-            ->add('status', ChoiceType::class, [
-                'choices' => [
-                    'Available' => 'Available',
-                    'Rented' => 'Rented',
-                    'Maintenance' => 'Maintenance',
-                ],
-            ])
+            ->add('totalUnits', IntegerType::class)
+            ->add('availableUnits', IntegerType::class)
             ->add('image', TextType::class, [
                 'required' => false,
             ]);
