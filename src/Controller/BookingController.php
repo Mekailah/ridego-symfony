@@ -38,7 +38,8 @@ class BookingController extends AbstractController
             return $this->redirectToRoute('admin_bookings');
         }
 
-        if ($booking->isReturned()) {
+        // Only confirmed bookings can be returned
+        if ($booking->getStatus() !== 'Confirmed' || $booking->isReturned()) {
             return $this->redirectToRoute('admin_bookings');
         }
 
@@ -48,19 +49,24 @@ class BookingController extends AbstractController
                 'name' => $booking->getMotorcycleName()
             ]);
 
-        if ($motorcycle) {
-            if ($motorcycle->getAvailableUnits() < $motorcycle->getTotalUnits()) {
-                $motorcycle->setAvailableUnits(
-                    $motorcycle->getAvailableUnits() + 1
-                );
-            }
+        if (!$motorcycle) {
+            $this->addFlash('error', 'Motorcycle record not found.');
 
-            if ($motorcycle->getAvailableUnits() > 0) {
-                $motorcycle->setStatus('Available');
-            } else {
-                $motorcycle->setStatus('Unavailable');
-            }
+            return $this->redirectToRoute('admin_bookings');
         }
+
+        // Restore one available unit
+        if ($motorcycle->getAvailableUnits() < $motorcycle->getTotalUnits()) {
+            $motorcycle->setAvailableUnits(
+                $motorcycle->getAvailableUnits() + 1
+            );
+        }
+
+        $motorcycle->setStatus(
+            $motorcycle->getAvailableUnits() > 0
+                ? 'Available'
+                : 'Unavailable'
+        );
 
         $booking->setReturned(true);
         $booking->setStatus('Returned');
@@ -84,7 +90,7 @@ class BookingController extends AbstractController
             return $this->redirectToRoute('admin_bookings');
         }
 
-        // Prevent deducting inventory more than once
+        // Prevent confirming or deducting inventory twice
         if ($booking->getStatus() !== 'Pending') {
             return $this->redirectToRoute('admin_bookings');
         }
@@ -95,24 +101,22 @@ class BookingController extends AbstractController
                 'name' => $booking->getMotorcycleName()
             ]);
 
-        if (!$motorcycle) {
+        if (!$motorcycle || $motorcycle->getAvailableUnits() <= 0) {
+            $this->addFlash('error', 'No available motorcycle unit found.');
+
             return $this->redirectToRoute('admin_bookings');
         }
 
-        // Make sure a unit is available
-        if ($motorcycle->getAvailableUnits() <= 0) {
-            return $this->redirectToRoute('admin_bookings');
-        }
-
+        // Deduct one available unit
         $motorcycle->setAvailableUnits(
             $motorcycle->getAvailableUnits() - 1
         );
 
-        if ($motorcycle->getAvailableUnits() > 0) {
-            $motorcycle->setStatus('Available');
-        } else {
-            $motorcycle->setStatus('Unavailable');
-        }
+        $motorcycle->setStatus(
+            $motorcycle->getAvailableUnits() > 0
+                ? 'Available'
+                : 'Unavailable'
+        );
 
         $booking->setStatus('Confirmed');
 
@@ -120,6 +124,35 @@ class BookingController extends AbstractController
 
         return $this->redirectToRoute('admin_bookings');
     }
+    
+    #[Route('/admin/bookings/{id}/delete', name: 'admin_booking_delete', methods: ['POST'])]
+    public function delete(
+        Booking $booking,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        if (!$this->isCsrfTokenValid(
+            'delete'.$booking->getId(),
+            $request->request->get('_token')
+        )) {
+            return $this->redirectToRoute('admin_bookings');
+        }
+
+        // Only pending bookings can be deleted
+        if ($booking->getStatus() !== 'Pending') {
+            $this->addFlash('error', 'Only pending bookings can be deleted.');
+
+            return $this->redirectToRoute('admin_bookings');
+        }
+
+        $entityManager->remove($booking);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Booking deleted successfully.');
+
+        return $this->redirectToRoute('admin_bookings');
+    }
+    
 
     #[Route('/admin/bookings/new', name: 'admin_booking_new')]
     public function new(
@@ -128,17 +161,20 @@ class BookingController extends AbstractController
     ): Response {
         $booking = new Booking();
 
+        // Only motorcycles with available units can be selected
         $motorcycles = $entityManager
             ->getRepository(Motorcycle::class)
-            ->findBy(['status' => 'Available'], ['name' => 'ASC']);
+            ->findBy([], ['name' => 'ASC']);
 
         $motorcycleChoices = [];
 
         foreach ($motorcycles as $motorcycle) {
-            $motorcycleChoices[
-                $motorcycle->getName() .
-                ' (' . $motorcycle->getAvailableUnits() . ' available)'
-            ] = $motorcycle->getName();
+            if ($motorcycle->getAvailableUnits() > 0) {
+                $motorcycleChoices[
+                    $motorcycle->getName() .
+                    ' (' . $motorcycle->getAvailableUnits() . ' available)'
+                ] = $motorcycle->getName();
+            }
         }
 
         $form = $this->createForm(BookingType::class, $booking, [

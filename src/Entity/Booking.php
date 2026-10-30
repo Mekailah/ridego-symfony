@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Repository\BookingRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: BookingRepository::class)]
 class Booking
@@ -35,6 +37,28 @@ class Booking
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $returnedAt = null;
 
+        #[Assert\Callback]
+    public function validateDates(ExecutionContextInterface $context): void
+    {
+        if (
+            $this->pickupDate !== null &&
+            $this->returnDate !== null &&
+            $this->returnDate < $this->pickupDate
+        ) {
+            $context->buildViolation('Return date must be on or after the pickup date.')
+                ->atPath('returnDate')
+                ->addViolation();
+        }
+
+        $today = new \DateTime('today');
+
+        if ($this->pickupDate !== null && $this->pickupDate < $today) {
+            $context->buildViolation('Pick-up date cannot be in the past.')
+                ->atPath('pickupDate')
+                ->addViolation();
+        }
+    }
+    
     public function getId(): ?int
     {
         return $this->id;
