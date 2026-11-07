@@ -5,6 +5,8 @@
 
 {% block body %}
 
+{# ================= PAGE HEADER ================= #}
+
 <div class="page-header">
     <div>
         <h1>Booking Management</h1>
@@ -16,9 +18,13 @@
     </a>
 </div>
 
+
+{# ================= BOOKINGS TABLE ================= #}
+
 <div class="table-container">
 
     <table>
+
         <thead>
             <tr>
                 <th>Customer</th>
@@ -36,41 +42,55 @@
         {% for booking in bookings %}
 
             <tr>
+
                 <td>{{ booking.customerName }}</td>
 
                 <td>{{ booking.motorcycleName }}</td>
 
-                <td>{{ booking.pickupDate|date('M d, Y') }}</td>
-
-                <td>{{ booking.returnDate|date('M d, Y') }}</td>
+                <td>
+                    {{ booking.pickupDate|date('M d, Y') }}
+                </td>
 
                 <td>
+                    {{ booking.returnDate|date('M d, Y') }}
+                </td>
+
+                <td>
+
                     {% if booking.status == 'Pending' %}
+
                         <span class="status pending">
                             Pending
                         </span>
 
                     {% elseif booking.status == 'Confirmed' %}
+
                         <span class="status confirmed">
                             Confirmed
                         </span>
 
                     {% elseif booking.status == 'Returned' %}
+
                         <span class="status available">
                             Returned
                         </span>
 
                     {% else %}
+
                         {{ booking.status }}
+
                     {% endif %}
+
                 </td>
 
                 <td>
+
                     {% if booking.returned %}
                         Yes
                     {% else %}
                         No
                     {% endif %}
+
                 </td>
 
                 <td>
@@ -79,50 +99,69 @@
 
                         <div style="display: flex; align-items: center; gap: 8px;">
 
-                            {# Confirm button - LEFT #}
+                            {# ========== CONFIRM BOOKING ========== #}
+
                             <form
                                 method="post"
                                 action="{{ path('admin_booking_confirm', {'id': booking.id}) }}"
                                 style="margin: 0;"
                             >
+
                                 <input
                                     type="hidden"
                                     name="_token"
                                     value="{{ csrf_token('confirm' ~ booking.id) }}"
                                 >
 
-                                <button type="submit" class="confirm-btn">
+                                <button
+                                    type="submit"
+                                    class="confirm-btn"
+                                >
                                     Confirm
                                 </button>
+
                             </form>
 
-                            {# Delete button - RIGHT #}
+
+                            {# ========== DELETE BOOKING ========== #}
+
                             <form
                                 method="post"
                                 action="{{ path('admin_booking_delete', {'id': booking.id}) }}"
+                                id="booking-delete-form-{{ booking.id }}"
                                 style="margin: 0;"
-                                onsubmit="return confirm('Are you sure you want to delete this booking?');"
                             >
+
                                 <input
                                     type="hidden"
                                     name="_token"
                                     value="{{ csrf_token('delete' ~ booking.id) }}"
                                 >
 
-                                <button type="submit" class="delete-btn">
+                                <button
+                                    type="button"
+                                    class="delete-btn"
+                                    style="border: none; cursor: pointer;"
+                                    onclick="openBookingDeleteModal({{ booking.id }})"
+                                >
                                     Delete
                                 </button>
+
                             </form>
 
                         </div>
 
+
                     {% elseif booking.status == 'Confirmed' and not booking.returned %}
+
+                        {# ========== MARK AS RETURNED ========== #}
 
                         <form
                             method="post"
                             action="{{ path('admin_booking_return', {'id': booking.id}) }}"
                             style="margin: 0;"
                         >
+
                             <input
                                 type="hidden"
                                 name="_token"
@@ -135,7 +174,9 @@
                             >
                                 Mark as Returned
                             </button>
+
                         </form>
+
 
                     {% elseif booking.returned %}
 
@@ -146,6 +187,7 @@
                     {% endif %}
 
                 </td>
+
             </tr>
 
         {% else %}
@@ -163,5 +205,83 @@
     </table>
 
 </div>
+
+
+{# ================= DELETE BOOKING MODAL ================= #}
+
+<div id="bookingDeleteModal" class="modal-overlay">
+
+    <div class="delete-modal">
+
+        <h2>Delete Booking?</h2>
+
+        <p>
+            Are you sure you want to delete this booking?
+        </p>
+
+        <div class="modal-actions">
+
+            <button
+                type="button"
+                class="cancel-delete-btn"
+                onclick="closeBookingDeleteModal()"
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="confirm-delete-btn"
+                onclick="confirmBookingDelete()"
+            >
+                Delete
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+{# ================= DELETE BOOKING JAVASCRIPT ================= #}
+
+<script>
+
+    let bookingDeleteId = null;
+
+    function openBookingDeleteModal(id) {
+
+        bookingDeleteId = id;
+
+        document.getElementById('bookingDeleteModal').style.display = 'flex';
+
+    }
+
+    function closeBookingDeleteModal() {
+
+        document.getElementById('bookingDeleteModal').style.display = 'none';
+
+        bookingDeleteId = null;
+
+    }
+
+    function confirmBookingDelete() {
+
+        if (bookingDeleteId !== null) {
+
+            const deleteForm = document.getElementById(
+                'booking-delete-form-' + bookingDeleteId
+            );
+
+            if (deleteForm) {
+                deleteForm.submit();
+            }
+
+        }
+
+    }
+
+</script>
 
 {% endblock %}

@@ -9,18 +9,57 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 class MotorcycleController extends AbstractController
 {
-    #[Route('/admin/motorcycles', name: 'admin_motorcycles')]
-    public function index(EntityManagerInterface $entityManager): Response
-    {
+    #[Route('/admin/motorcycles', name: 'admin_motorcycles', methods: ['GET', 'POST'])]
+    public function index(
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
         $motorcycles = $entityManager
             ->getRepository(Motorcycle::class)
             ->findAll();
 
+            $editForms = [];
+
+            foreach ($motorcycles as $existingMotorcycle) {
+                $editForm = $this->createForm(
+                    MotorcycleType::class,
+                    $existingMotorcycle,
+                    [
+                        'action' => $this->generateUrl('admin_motorcycle_edit', [
+                            'id' => $existingMotorcycle->getId(),
+                        ]),
+                        'method' => 'POST',
+                    ]
+                );
+
+                $editForms[$existingMotorcycle->getId()] = $editForm->createView();
+            }
+
+        $motorcycle = new Motorcycle();
+
+        $form = $this->createForm(MotorcycleType::class, $motorcycle);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->saveMotorcycleImage($form->get('image')->getData(), $motorcycle);
+
+            $entityManager->persist($motorcycle);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Motorcycle added successfully.');
+
+            return $this->redirectToRoute('admin_motorcycles');
+        }
+
         return $this->render('motorcycle/index.html.twig', [
             'motorcycles' => $motorcycles,
+            'form' => $form->createView(),
+            'editForms' => $editForms,
         ]);
     }
 
@@ -35,8 +74,12 @@ class MotorcycleController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $this->saveMotorcycleImage($form->get('image')->getData(), $motorcycle);
+
             $entityManager->persist($motorcycle);
             $entityManager->flush();
+
+            $this->addFlash('success', 'Motorcycle added successfully.');
 
             return $this->redirectToRoute('admin_motorcycles');
         }
@@ -56,7 +99,12 @@ class MotorcycleController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Keep the existing image if no new file is selected.
+            $this->saveMotorcycleImage($form->get('image')->getData(), $motorcycle);
+
             $entityManager->flush();
+
+            $this->addFlash('success', 'Motorcycle updated successfully.');
 
             return $this->redirectToRoute('admin_motorcycles');
         }
@@ -82,5 +130,24 @@ class MotorcycleController extends AbstractController
         }
 
         return $this->redirectToRoute('admin_motorcycles');
+    }
+
+    private function saveMotorcycleImage(
+        ?UploadedFile $imageFile,
+        Motorcycle $motorcycle
+    ): void {
+        if ($imageFile === null) {
+            return;
+        }
+
+        $extension = $imageFile->guessExtension() ?: 'bin';
+        $filename = bin2hex(random_bytes(16)).'.'.$extension;
+
+        $imageFile->move(
+            $this->getParameter('kernel.project_dir').'/public/images/motorcycles',
+            $filename
+        );
+
+        $motorcycle->setImage($filename);
     }
 }

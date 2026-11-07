@@ -18,6 +18,10 @@ class Motorcycle
     private ?string $name = null;
 
     #[ORM\Column]
+    #[Assert\GreaterThanOrEqual(
+        value: 0,
+        message: 'Price per day cannot be negative.'
+    )]
     private ?int $pricePerDay = null;
 
     #[ORM\Column(length: 255, nullable: true)]

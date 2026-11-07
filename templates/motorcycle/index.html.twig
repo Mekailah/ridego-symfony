@@ -1,3 +1,4 @@
+
 {% extends 'admin/base.html.twig' %}
 
 {% block title %}Motorcycles | RideGo{% endblock %}
@@ -10,10 +11,218 @@
         <p>Manage motorcycles available for rental.</p>
     </div>
 
-    <a href="{{ path('admin_motorcycle_new') }}" class="add-btn">
+    <button
+        type="button"
+        class="add-btn"
+        data-bs-toggle="modal"
+        data-bs-target="#addMotorcycleModal">
         + Add Motorcycle
-    </a>
+    </button>
 </div>
+
+
+{# ================= ADD MOTORCYCLE MODAL ================= #}
+
+<div class="modal fade"
+     id="addMotorcycleModal"
+     tabindex="-1"
+     aria-labelledby="addMotorcycleModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="addMotorcycleModalLabel">
+                    Add Motorcycle
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                {{ form_start(form) }}
+
+                <div class="mb-3">
+                    {{ form_label(form.name, 'Motorcycle Name') }}
+                    {{ form_widget(form.name, {
+                        'attr': {'class': 'form-control'}
+                    }) }}
+                    {{ form_errors(form.name) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(form.pricePerDay, 'Price Per Day') }}
+                    {{ form_widget(form.pricePerDay, {
+                        'attr': {'class': 'form-control'}
+                    }) }}
+                    {{ form_errors(form.pricePerDay) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(form.totalUnits, 'Total Units') }}
+                    {{ form_widget(form.totalUnits, {
+                        'attr': {'class': 'form-control'}
+                    }) }}
+                    {{ form_errors(form.totalUnits) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(form.availableUnits, 'Available Units') }}
+                    {{ form_widget(form.availableUnits, {
+                        'attr': {'class': 'form-control'}
+                    }) }}
+                    {{ form_errors(form.availableUnits) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(form.image, 'Image') }}
+                    {{ form_widget(form.image, {
+                        'attr': {'class': 'form-control'}
+                    }) }}
+                    {{ form_errors(form.image) }}
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <button type="submit"
+                            class="btn"
+                            style="background-color: #3C9995; color: white; border: none;">
+                        Save Motorcycle
+                    </button>
+                </div>
+
+                {{ form_end(form) }}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{# ================= EDIT MOTORCYCLE MODALS ================= #}
+
+{% for motorcycle in motorcycles %}
+
+<div class="modal fade"
+     id="editMotorcycleModal{{ motorcycle.id }}"
+     tabindex="-1"
+     aria-labelledby="editMotorcycleModalLabel{{ motorcycle.id }}"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title"
+                    id="editMotorcycleModalLabel{{ motorcycle.id }}">
+                    Edit Motorcycle
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+            </div>
+
+            {{ form_start(editForms[motorcycle.id]) }}
+
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    {{ form_label(editForms[motorcycle.id].name, 'Motorcycle Name') }}
+                    {{ form_widget(editForms[motorcycle.id].name, {
+                        'attr': {'class': 'form-control'}
+                    }) }}
+                    {{ form_errors(editForms[motorcycle.id].name) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(editForms[motorcycle.id].pricePerDay, 'Price Per Day') }}
+                    {{ form_widget(editForms[motorcycle.id].pricePerDay, {
+                        'attr': {'class': 'form-control'}
+                    }) }}
+                    {{ form_errors(editForms[motorcycle.id].pricePerDay) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(editForms[motorcycle.id].totalUnits, 'Total Units') }}
+                    {{ form_widget(editForms[motorcycle.id].totalUnits, {
+                        'attr': {'class': 'form-control'}
+                    }) }}
+                    {{ form_errors(editForms[motorcycle.id].totalUnits) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(editForms[motorcycle.id].availableUnits, 'Available Units') }}
+                    {{ form_widget(editForms[motorcycle.id].availableUnits, {
+                        'attr': {'class': 'form-control'}
+                    }) }}
+                    {{ form_errors(editForms[motorcycle.id].availableUnits) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(editForms[motorcycle.id].image, 'Image') }}
+                    {{ form_widget(editForms[motorcycle.id].image, {
+                        'attr': {'class': 'form-control'}
+                    }) }}
+                    {{ form_errors(editForms[motorcycle.id].image) }}
+
+                    <small class="text-muted">
+                        Leave empty to keep the current image.
+                    </small>
+                </div>
+
+                {% if motorcycle.image %}
+                    <div class="mb-3">
+                        <label class="form-label">Current Image</label>
+
+                        <div>
+                            <img
+                                src="{{ asset('images/motorcycles/' ~ motorcycle.image) }}"
+                                alt="{{ motorcycle.name }}"
+                                style="width: 120px; height: 80px; object-fit: cover; border-radius: 6px;">
+                        </div>
+                    </div>
+                {% endif %}
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <button type="submit"
+                        class="btn"
+                        style="background-color: #3C9995; color: white; border: none;">
+                    Save Changes
+                </button>
+            </div>
+
+            {{ form_end(editForms[motorcycle.id]) }}
+
+        </div>
+    </div>
+</div>
+
+{% endfor %}
+
+
+{# ================= MOTORCYCLE TABLE ================= #}
 
 <div class="table-container">
 
@@ -38,7 +247,10 @@
                 <td>
                     <div class="motorcycle-image">
                         {% if motorcycle.image %}
-                            {{ motorcycle.image }}
+                            <img
+                                src="{{ asset('images/motorcycles/' ~ motorcycle.image) }}"
+                                alt="{{ motorcycle.name }}"
+                                style="width: 90px; height: 60px; object-fit: cover; border-radius: 6px;">
                         {% else %}
                             No Image
                         {% endif %}
@@ -50,7 +262,7 @@
                 <td>₱{{ motorcycle.pricePerDay }}.00</td>
 
                 <td>{{ motorcycle.totalUnits }}</td>
-                
+
                 <td>{{ motorcycle.availableUnits }}</td>
 
                 <td>
@@ -68,29 +280,31 @@
                 <td>
                     <div class="actions">
 
-                        <a href="{{ path('admin_motorcycle_edit', {'id': motorcycle.id}) }}"
-                        class="edit-btn">
+                        <button type="button"
+                                class="edit-btn"
+                                style="border: none; cursor: pointer;"
+                                data-bs-toggle="modal"
+                                data-bs-target="#editMotorcycleModal{{ motorcycle.id }}">
                             Edit
-                        </a>
+                        </button>
 
-                        <form
-                            method="post"
-                            action="{{ path('admin_motorcycle_delete', {'id': motorcycle.id}) }}"
-                            id="delete-form-{{ motorcycle.id }}"
-                            style="margin: 0;"
-                        >
-                            <input
-                                type="hidden"
-                                name="_token"
-                                value="{{ csrf_token('delete' ~ motorcycle.id) }}"
-                            >
+                        <form method="post"
+                              action="{{ path('admin_motorcycle_delete', {
+                                  'id': motorcycle.id
+                              }) }}"
+                              id="delete-form-{{ motorcycle.id }}"
+                              style="margin: 0;">
 
-                            <button
-                                type="button"
-                                class="delete-btn"
-                                onclick="openDeleteModal({{ motorcycle.id }})">
+                            <input type="hidden"
+                                   name="_token"
+                                   value="{{ csrf_token('delete' ~ motorcycle.id) }}">
+
+                            <button type="button"
+                                    class="delete-btn"
+                                    onclick="openDeleteModal({{ motorcycle.id }})">
                                 Delete
                             </button>
+
                         </form>
 
                     </div>
@@ -108,10 +322,12 @@
         {% endfor %}
 
         </tbody>
-
     </table>
 
 </div>
+
+
+{# ================= DELETE MOTORCYCLE MODAL ================= #}
 
 <div id="deleteModal" class="modal-overlay">
     <div class="delete-modal">
@@ -123,29 +339,32 @@
         </p>
 
         <div class="modal-actions">
-            <button
-                type="button"
-                class="cancel-delete-btn"
-                onclick="closeDeleteModal()">
+
+            <button type="button"
+                    class="cancel-delete-btn"
+                    onclick="closeDeleteModal()">
                 Cancel
             </button>
 
-            <button
-                type="button"
-                class="confirm-delete-btn"
-                onclick="confirmDelete()">
+            <button type="button"
+                    class="confirm-delete-btn"
+                    onclick="confirmDelete()">
                 Delete
             </button>
-        </div>
 
+        </div>
     </div>
 </div>
+
+
+{# ================= DELETE MOTORCYCLE JAVASCRIPT ================= #}
 
 <script>
     let deleteFormId = null;
 
     function openDeleteModal(id) {
         deleteFormId = id;
+
         document.getElementById('deleteModal').style.display = 'flex';
     }
 
