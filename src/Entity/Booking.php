@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\BookingRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
@@ -36,6 +38,20 @@ class Booking
 
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $returnedAt = null;
+
+    /**
+     * @var Collection<int, Payment>
+     */
+    #[ORM\OneToMany(targetEntity: Payment::class, mappedBy: 'booking')]
+    private Collection $payments;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    private ?string $totalAmount = null;
+
+    public function __construct()
+    {
+        $this->payments = new ArrayCollection();
+    }
 
         #[Assert\Callback]
     public function validateDates(ExecutionContextInterface $context): void
@@ -144,6 +160,48 @@ class Booking
     public function setReturnedAt(?\DateTimeImmutable $returnedAt): static
     {
         $this->returnedAt = $returnedAt;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Payment>
+     */
+    public function getPayments(): Collection
+    {
+        return $this->payments;
+    }
+
+    public function addPayment(Payment $payment): static
+    {
+        if (!$this->payments->contains($payment)) {
+            $this->payments->add($payment);
+            $payment->setBooking($this);
+        }
+
+        return $this;
+    }
+
+    public function removePayment(Payment $payment): static
+    {
+        if ($this->payments->removeElement($payment)) {
+            // set the owning side to null (unless already changed)
+            if ($payment->getBooking() === $this) {
+                $payment->setBooking(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getTotalAmount(): ?string
+    {
+        return $this->totalAmount;
+    }
+
+    public function setTotalAmount(?string $totalAmount): static
+    {
+        $this->totalAmount = $totalAmount;
 
         return $this;
     }

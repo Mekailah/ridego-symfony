@@ -185,15 +185,42 @@ class BookingController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
 
-            $booking->setStatus('Pending');
-            $booking->setReturned(false);
-            $booking->setReturnedAt(null);
+    // Find the selected motorcycle
+    $motorcycle = $entityManager
+        ->getRepository(Motorcycle::class)
+        ->findOneBy([
+            'name' => $booking->getMotorcycleName()
+        ]);
 
-            $entityManager->persist($booking);
-            $entityManager->flush();
+    if (!$motorcycle) {
+            $this->addFlash('error', 'Selected motorcycle not found.');
 
-            return $this->redirectToRoute('admin_bookings');
+            return $this->redirectToRoute('admin_booking_new');
         }
+
+        // Calculate rental duration (minimum 1 day)
+        $pickupDate = $booking->getPickupDate();
+        $returnDate = $booking->getReturnDate();
+
+        $rentalDays = max(
+            1,
+            (int) $pickupDate->diff($returnDate)->days
+        );
+
+        // Calculate and save booking total
+        $totalAmount = $motorcycle->getPricePerDay() * $rentalDays;
+
+        $booking->setTotalAmount((string) $totalAmount);
+
+        $booking->setStatus('Pending');
+        $booking->setReturned(false);
+        $booking->setReturnedAt(null);
+
+        $entityManager->persist($booking);
+        $entityManager->flush();
+
+        return $this->redirectToRoute('admin_bookings');
+    }
 
         return $this->render('booking/new.html.twig', [
             'form' => $form,

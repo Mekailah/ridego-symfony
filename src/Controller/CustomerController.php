@@ -65,36 +65,68 @@ final class CustomerController extends AbstractController
 
     // ================= ADD CUSTOMER =================
 
-    #[Route('/new', name: 'app_customer_new', methods: ['GET', 'POST'])]
-    public function new(
-        Request $request,
-        EntityManagerInterface $entityManager
-    ): Response {
-        $customer = new Customer();
+    
+#[Route('/new', name: 'app_customer_new', methods: ['GET', 'POST'])]
+public function new(
+    Request $request,
+    EntityManagerInterface $entityManager,
+    CustomerRepository $customerRepository,
+    FormFactoryInterface $formFactory
+): Response {
+    $customer = new Customer();
 
-        $form = $this->createForm(
+    $form = $this->createForm(
+        CustomerType::class,
+        $customer,
+        [
+            'action' => $this->generateUrl('app_customer_new'),
+            'method' => 'POST',
+        ]
+    );
+
+    $form->handleRequest($request);
+
+    if ($form->isSubmitted() && $form->isValid()) {
+        $entityManager->persist($customer);
+        $entityManager->flush();
+
+        return $this->redirectToRoute(
+            'app_customer_index',
+            [],
+            Response::HTTP_SEE_OTHER
+        );
+    }
+
+    // If validation fails, return to Customer Management
+    $customers = $customerRepository->findAll();
+
+    $editForms = [];
+
+    foreach ($customers as $existingCustomer) {
+        $editForm = $formFactory->createNamed(
+            'customer_edit_' . $existingCustomer->getId(),
             CustomerType::class,
-            $customer
+            $existingCustomer,
+            [
+                'action' => $this->generateUrl(
+                    'app_customer_edit',
+                    ['id' => $existingCustomer->getId()]
+                ),
+                'method' => 'POST',
+            ]
         );
 
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($customer);
-            $entityManager->flush();
-
-            return $this->redirectToRoute(
-                'app_customer_index',
-                [],
-                Response::HTTP_SEE_OTHER
-            );
-        }
-
-        return $this->render('customer/new.html.twig', [
-            'customer' => $customer,
-            'form' => $form->createView(),
-        ]);
+        $editForms[$existingCustomer->getId()] =
+            $editForm->createView();
     }
+
+    return $this->render('customer/index.html.twig', [
+        'customers' => $customers,
+        'form' => $form->createView(),
+        'editForms' => $editForms,
+        'openAddCustomerModal' => $form->isSubmitted(),
+    ]);
+}
 
 
     // ================= EDIT CUSTOMER =================

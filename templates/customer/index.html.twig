@@ -49,6 +49,8 @@
 
             <div class="modal-body">
 
+                {{ form_errors(form) }}
+
                 <div class="mb-3">
                     {{ form_label(form.name, 'Customer Name') }}
                     {{ form_widget(form.name, {
@@ -89,7 +91,8 @@
                 </button>
             </div>
 
-            {{ form_end(form) }}
+            {{ form_rest(form) }}
+            {{ form_end(form, {'render_rest': false}) }}
 
         </div>
     </div>
@@ -185,7 +188,8 @@
                 </button>
             </div>
 
-            {{ form_end(editForms[customer.id]) }}
+            {{ form_rest(editForms[customer.id]) }}
+            {{ form_end(editForms[customer.id], {'render_rest': false}) }}
 
         </div>
     </div>
@@ -341,18 +345,32 @@
         }
     }
 
-    // Reopen the Edit popup when Symfony returns validation errors
     document.addEventListener('DOMContentLoaded', function () {
 
+        // Reopen Add Customer popup when validation fails
+        {% if openAddCustomerModal is defined and openAddCustomerModal %}
+
+            const addModalElement = document.getElementById(
+                'addCustomerModal'
+            );
+
+            if (addModalElement && typeof bootstrap !== 'undefined') {
+                const addModal = new bootstrap.Modal(addModalElement);
+                addModal.show();
+            }
+
+        {% endif %}
+
+        // Reopen Edit Customer popup when validation fails
         {% if openEditCustomerId is defined %}
 
-            const modalElement = document.getElementById(
+            const editModalElement = document.getElementById(
                 'editCustomerModal{{ openEditCustomerId }}'
             );
 
-            if (modalElement && typeof bootstrap !== 'undefined') {
-                const modal = new bootstrap.Modal(modalElement);
-                modal.show();
+            if (editModalElement && typeof bootstrap !== 'undefined') {
+                const editModal = new bootstrap.Modal(editModalElement);
+                editModal.show();
             }
 
         {% endif %}
