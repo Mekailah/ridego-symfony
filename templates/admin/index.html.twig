@@ -1,8 +1,11 @@
+
 {% extends 'admin/base.html.twig' %}
 
 {% block title %}Dashboard | RideGo{% endblock %}
 
 {% block body %}
+
+{# ================= PAGE HEADER ================= #}
 
 <div class="page-header">
     <div>
@@ -10,6 +13,8 @@
         <p>Welcome to the RideGo Admin Panel</p>
     </div>
 </div>
+
+{# ================= DASHBOARD STATISTICS ================= #}
 
 <div class="dashboard-cards">
 
@@ -25,14 +30,210 @@
 
     <div class="card">
         <h3>Total Bookings</h3>
-        <h2>0</h2>
+        <h2>{{ totalBookings }}</h2>
     </div>
 
     <div class="card">
         <h3>Pending Bookings</h3>
-        <h2>0</h2>
+        <h2>{{ pendingBookings }}</h2>
+    </div>
+
+    <div class="card">
+        <h3>Total Customers</h3>
+        <h2>{{ totalCustomers }}</h2>
+    </div>
+
+    <div class="card">
+        <h3>Confirmed Bookings</h3>
+        <h2>{{ confirmedBookings }}</h2>
+    </div>
+
+    <div class="card">
+        <h3>Returned Bookings</h3>
+        <h2>{{ returnedBookings }}</h2>
+    </div>
+
+    <div class="card">
+        <h3>Total Revenue</h3>
+        <h2>₱{{ totalRevenue|number_format(2, '.', ',') }}</h2>
     </div>
 
 </div>
+
+{# ================= RECENT BOOKINGS ================= #}
+
+<div class="recent-bookings-section">
+
+    <div class="recent-bookings-header">
+        <div>
+            <h2>Recent Bookings</h2>
+            <p>View the latest motorcycle rental bookings.</p>
+        </div>
+
+        <a href="{{ path('admin_bookings') }}"
+           class="recent-bookings-link">
+            View All Bookings
+        </a>
+    </div>
+
+    <div class="recent-bookings-table">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Customer</th>
+                        <th>Motorcycle</th>
+                        <th>Pick-up Date</th>
+                        <th>Booking Status</th>
+                        <th>Payment Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for booking in recentBookings %}
+                        <tr>
+                            <td>#{{ booking.id }}</td>
+
+                            <td>{{ booking.customerName }}</td>
+
+                            <td>{{ booking.motorcycleName }}</td>
+
+                            <td>
+                                {{ booking.pickupDate|date('M d, Y') }}
+                            </td>
+
+                            <td>
+                                {% if booking.status == 'Pending' %}
+                                    <span class="badge bg-warning text-dark">
+                                        Pending
+                                    </span>
+                                {% elseif booking.status == 'Confirmed' %}
+                                    <span class="badge bg-primary">
+                                        Confirmed
+                                    </span>
+                                {% elseif booking.status == 'Returned' %}
+                                    <span class="badge bg-success">
+                                        Returned
+                                    </span>
+                                {% else %}
+                                    {{ booking.status }}
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% set isPaid = false %}
+
+                                {% for payment in booking.payments %}
+                                    {% if payment.paymentStatus == 'Paid' %}
+                                        {% set isPaid = true %}
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if isPaid %}
+                                    <span class="badge bg-success">
+                                        Paid
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">
+                                        Unpaid
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                No bookings found.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{# ================= RECENT BOOKINGS STYLING ================= #}
+
+<style>
+    .recent-bookings-section {
+        margin-top: 36px;
+    }
+
+    .recent-bookings-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .recent-bookings-header h2 {
+        font-size: 25px;
+        font-weight: 600;
+        color: #102033;
+        margin: 0 0 6px;
+    }
+
+    .recent-bookings-header p {
+        color: #6b7280;
+        margin: 0;
+    }
+
+    .recent-bookings-link {
+        display: inline-block;
+        background-color: #3c9995;
+        color: #ffffff;
+        padding: 12px 18px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .recent-bookings-link:hover {
+        background-color: #307f7b;
+        color: #ffffff;
+    }
+
+    .recent-bookings-table {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+    }
+
+    .recent-bookings-table table {
+        width: 100%;
+    }
+
+    .recent-bookings-table th {
+        padding: 16px;
+        font-weight: 600;
+        color: #667085;
+        white-space: nowrap;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .recent-bookings-table td {
+        padding: 18px 16px;
+        color: #102033;
+        border-bottom: 1px solid #e5e7eb;
+        white-space: nowrap;
+    }
+
+    .recent-bookings-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    @media (max-width: 768px) {
+        .recent-bookings-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
+</style>
 
 {% endblock %}

@@ -451,19 +451,19 @@
             Motorcycles
         </a>
 
+        <a href="{{ path('app_customer_index') }}"
+        class="{{ app.request.attributes.get('_route') starts with 'app_customer_' ? 'active' : '' }}">
+            Customers
+        </a>
+        
         <a href="{{ path('admin_bookings') }}"
         class="{{ app.request.attributes.get('_route') starts with 'admin_booking' ? 'active' : '' }}">
             Bookings
         </a>
 
-        
-        <a href="{{ path('app_customer_index') }}"
-        class="{{ app.request.attributes.get('_route') starts with 'app_customer_' ? 'active' : '' }}">
-            Customers
-        </a>
 
-
-        <a href="#">
+        <a href="{{ path('app_payment_index') }}"
+        class="{{ app.request.attributes.get('_route') starts with 'app_payment_' ? 'active' : '' }}">
             Payments
         </a>
 
@@ -478,10 +478,17 @@
 </div>
 
 
+
 <main class="main-content">
+
+    {# Clear success notifications without displaying them #}
+    {% set unusedSuccessMessages = app.flashes('success') %}
 
     {% block body %}
     {% endblock %}
+
+</main>
+
 
 </main>
 

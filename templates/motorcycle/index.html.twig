@@ -5,6 +5,25 @@
 
 {% block body %}
 
+
+
+{# ========== ERROR NOTIFICATION ========== #}
+
+{% for message in app.flashes('error') %}
+    <div class="alert alert-danger alert-dismissible fade show motorcycle-alert"
+         role="alert">
+        {{ message }}
+
+        <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Close">
+        </button>
+    </div>
+{% endfor %}
+
+
 <div class="page-header">
     <div>
         <h1>Motorcycle Management</h1>
@@ -380,6 +399,16 @@
                 .submit();
         }
     }
+
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.motorcycle-alert').forEach(function (alert) {
+            setTimeout(function () {
+                bootstrap.Alert.getOrCreateInstance(alert).close();
+            }, 3000);
+        });
+    });
+
 </script>
 
 {% endblock %}

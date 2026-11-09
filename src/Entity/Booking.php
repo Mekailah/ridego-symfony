@@ -18,8 +18,14 @@ class Booking
     #[ORM\Column]
     private ?int $id = null;
 
+    // Keeps the customer names of existing bookings
     #[ORM\Column(length: 255)]
     private ?string $customerName = null;
+
+    // New relationship to Customer Management
+    #[ORM\ManyToOne(targetEntity: Customer::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Customer $customer = null;
 
     #[ORM\Column(length: 255)]
     private ?string $motorcycleName = null;
@@ -53,7 +59,7 @@ class Booking
         $this->payments = new ArrayCollection();
     }
 
-        #[Assert\Callback]
+    #[Assert\Callback]
     public function validateDates(ExecutionContextInterface $context): void
     {
         if (
@@ -74,7 +80,7 @@ class Booking
                 ->addViolation();
         }
     }
-    
+
     public function getId(): ?int
     {
         return $this->id;
@@ -88,6 +94,23 @@ class Booking
     public function setCustomerName(string $customerName): static
     {
         $this->customerName = $customerName;
+
+        return $this;
+    }
+
+    // New customer relationship getters and setters
+    public function getCustomer(): ?Customer
+    {
+        return $this->customer;
+    }
+
+    public function setCustomer(?Customer $customer): static
+    {
+        $this->customer = $customer;
+
+        if ($customer !== null && $customer->getName() !== null) {
+            $this->customerName = $customer->getName();
+        }
 
         return $this;
     }
@@ -185,7 +208,6 @@ class Booking
     public function removePayment(Payment $payment): static
     {
         if ($this->payments->removeElement($payment)) {
-            // set the owning side to null (unless already changed)
             if ($payment->getBooking() === $this) {
                 $payment->setBooking(null);
             }

@@ -1,3 +1,4 @@
+
 {% extends 'admin/base.html.twig' %}
 
 {% block title %}Add Booking | RideGo{% endblock %}
@@ -15,11 +16,63 @@
 
     {{ form_start(form) }}
 
+        {# ========== CUSTOMER ========== #}
+
         <div class="form-group">
-            {{ form_label(form.customerName, 'Customer Name') }}
-            {{ form_widget(form.customerName) }}
-            {{ form_errors(form.customerName) }}
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                {{ form_label(form.customer, 'Customer', {
+                    'label_attr': {'class': 'mb-0'}
+                }) }}
+
+                <a href="{{ path('app_customer_new') }}"
+                   class="btn btn-sm btn-outline-primary">
+                    + Add New Customer
+                </a>
+            </div>
+
+            {{ form_widget(form.customer, {
+                'attr': {'id': 'booking-customer'}
+            }) }}
+
+            {{ form_errors(form.customer) }}
+
+            <small class="text-muted">
+                Select a registered customer.
+            </small>
         </div>
+
+        {# ========== CUSTOMER DETAILS ========== #}
+
+        <div id="customer-details"
+             class="border rounded p-3 mb-3"
+             style="display: none;">
+
+            <div class="form-group">
+                <label for="customer-email">Email</label>
+                <input
+                    type="email"
+                    id="customer-email"
+                    class="form-control"
+                    readonly
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="customer-phone">Phone Number</label>
+                <input
+                    type="text"
+                    id="customer-phone"
+                    class="form-control"
+                    readonly
+                >
+            </div>
+
+            <small class="text-muted">
+                Customer details are managed in Customer Management.
+            </small>
+        </div>
+
+        {# ========== MOTORCYCLE ========== #}
 
         <div class="form-group">
             {{ form_label(form.motorcycleName, 'Motorcycle') }}
@@ -27,17 +80,23 @@
             {{ form_errors(form.motorcycleName) }}
         </div>
 
+        {# ========== PICK-UP DATE ========== #}
+
         <div class="form-group">
             {{ form_label(form.pickupDate, 'Pick-up Date') }}
             {{ form_widget(form.pickupDate) }}
             {{ form_errors(form.pickupDate) }}
         </div>
 
+        {# ========== RETURN DATE ========== #}
+
         <div class="form-group">
             {{ form_label(form.returnDate, 'Return Date') }}
             {{ form_widget(form.returnDate) }}
             {{ form_errors(form.returnDate) }}
         </div>
+
+        {# ========== ACTIONS ========== #}
 
         <div class="form-actions">
 
@@ -55,5 +114,47 @@
     {{ form_end(form) }}
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const customerSelect = document.getElementById('booking-customer');
+    const customerDetails = document.getElementById('customer-details');
+    const customerEmail = document.getElementById('customer-email');
+    const customerPhone = document.getElementById('customer-phone');
+
+    if (!customerSelect) {
+        return;
+    }
+
+    function updateCustomerDetails() {
+        const customerId = customerSelect.value;
+
+        if (!customerId) {
+            customerDetails.style.display = 'none';
+            customerEmail.value = '';
+            customerPhone.value = '';
+            return;
+        }
+
+        const customers = {{ customerDetails|json_encode|raw }};
+        const selectedCustomer = customers[customerId];
+
+        if (selectedCustomer) {
+            customerEmail.value = selectedCustomer.email || '';
+            customerPhone.value = selectedCustomer.phone || '';
+            customerDetails.style.display = 'block';
+        } else {
+            customerEmail.value = '';
+            customerPhone.value = '';
+            customerDetails.style.display = 'none';
+        }
+    }
+
+    customerSelect.addEventListener('change', updateCustomerDetails);
+    updateCustomerDetails();
+
+});
+</script>
 
 {% endblock %}

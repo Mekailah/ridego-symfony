@@ -19,13 +19,15 @@ class Payment
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private ?string $amount = null;
 
-    #[ORM\Column(length: 50)]
+    // Nullable because Pending payments have no payment method yet.
+    #[ORM\Column(length: 50, nullable: true)]
     private ?string $paymentMethod = null;
 
     #[ORM\Column(length: 30)]
     private ?string $paymentStatus = null;
 
-    #[ORM\Column]
+    // Nullable because the customer has not paid yet.
+    #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $paymentDate = null;
 
     #[ORM\ManyToOne(inversedBy: 'payments')]
@@ -54,7 +56,7 @@ class Payment
         return $this->paymentMethod;
     }
 
-    public function setPaymentMethod(string $paymentMethod): static
+    public function setPaymentMethod(?string $paymentMethod): static
     {
         $this->paymentMethod = $paymentMethod;
 
@@ -78,7 +80,7 @@ class Payment
         return $this->paymentDate;
     }
 
-    public function setPaymentDate(\DateTimeImmutable $paymentDate): static
+    public function setPaymentDate(?\DateTimeImmutable $paymentDate): static
     {
         $this->paymentDate = $paymentDate;
 
@@ -113,7 +115,7 @@ class Payment
 
         $bookingTotal = $booking->getTotalAmount();
 
-        // Older bookings do not have a calculated total.
+        // Older bookings may not have a calculated total.
         if ($bookingTotal === null) {
             $context->buildViolation(
                 'This booking has no rental total. Please update the booking first.'
@@ -124,11 +126,12 @@ class Payment
             return;
         }
 
-        // Compare monetary values in cents.
+        // Compare monetary values using integer cents.
         $toCents = static function (string $amount): int {
             $parts = explode('.', $amount, 2);
 
             $whole = (int) $parts[0];
+
             $fraction = (int) str_pad(
                 substr($parts[1] ?? '', 0, 2),
                 2,

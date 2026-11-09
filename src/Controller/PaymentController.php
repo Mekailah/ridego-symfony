@@ -22,7 +22,10 @@ final class PaymentController extends AbstractController
         PaymentRepository $paymentRepository,
         FormFactoryInterface $formFactory
     ): Response {
-        $payments = $paymentRepository->findAll();
+        $payments = $paymentRepository->findBy(
+            [],
+            ['id' => 'DESC']
+        );
 
         $addForm = $this->createForm(
             PaymentType::class,
@@ -33,25 +36,10 @@ final class PaymentController extends AbstractController
             ]
         );
 
-        $editForms = [];
-
-        foreach ($payments as $existingPayment) {
-            $editForm = $formFactory->createNamed(
-                'payment_edit_' . $existingPayment->getId(),
-                PaymentType::class,
-                $existingPayment,
-                [
-                    'action' => $this->generateUrl(
-                        'app_payment_edit',
-                        ['id' => $existingPayment->getId()]
-                    ),
-                    'method' => 'POST',
-                ]
-            );
-
-            $editForms[$existingPayment->getId()] =
-                $editForm->createView();
-        }
+        $editForms = $this->buildEditForms(
+            $payments,
+            $formFactory
+        );
 
         return $this->render('payment/index.html.twig', [
             'payments' => $payments,
@@ -83,32 +71,52 @@ final class PaymentController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
+            $booking = $payment->getBooking();
+
+            // Prevent duplicate payment records.
+            if (
+                $booking !== null &&
+                $paymentRepository->findOneBy([
+                    'booking' => $booking,
+                ]) !== null
+            ) {
+                $this->addFlash(
+                    'error',
+                    'This booking already has a payment record. Please edit the existing payment instead.'
+                );
+
+                return $this->redirectToRoute(
+                    'app_payment_index'
+                );
+            }
+
+            // Automatically record the actual payment date.
+            $this->updatePaymentDate($payment);
+
             $entityManager->persist($payment);
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_payment_index');
-        }
+            $this->addFlash(
+                    'success',
+                    'Payment added successfully.'
+                );
 
-        $payments = $paymentRepository->findAll();
-        $editForms = [];
+                return $this->redirectToRoute(
+                    'app_payment_index'
+                );
+            }
 
-        foreach ($payments as $existingPayment) {
-            $editForm = $formFactory->createNamed(
-                'payment_edit_' . $existingPayment->getId(),
-                PaymentType::class,
-                $existingPayment,
-                [
-                    'action' => $this->generateUrl(
-                        'app_payment_edit',
-                        ['id' => $existingPayment->getId()]
-                    ),
-                    'method' => 'POST',
-                ]
+            // Reopen Add Payment modal when validation fails.
+            $payments = $paymentRepository->findBy(
+                [],
+                ['id' => 'DESC']
             );
 
-            $editForms[$existingPayment->getId()] =
-                $editForm->createView();
-        }
+            $editForms = $this->buildEditForms(
+                $payments,
+                $formFactory
+            );
 
         return $this->render('payment/index.html.twig', [
             'payments' => $payments,
@@ -128,6 +136,10 @@ final class PaymentController extends AbstractController
         PaymentRepository $paymentRepository,
         FormFactoryInterface $formFactory
     ): Response {
+        // Remember the previous payment status before editing.
+        $previousStatus = $payment->getPaymentStatus();
+        $previousDate = $payment->getPaymentDate();
+
         $form = $formFactory->createNamed(
             'payment_edit_' . $payment->getId(),
             PaymentType::class,
@@ -144,12 +156,49 @@ final class PaymentController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
+            // Set the date only when payment becomes Paid.
+            if (
+                $payment->getPaymentStatus() === 'Paid' &&
+                $previousStatus !== 'Paid'
+            ) {
+                $payment->setPaymentDate(
+                    new \DateTimeImmutable()
+                );
+            }
+
+            // Keep the original date when editing an already Paid payment.
+            elseif (
+                $payment->getPaymentStatus() === 'Paid' &&
+                $previousStatus === 'Paid'
+            ) {
+                $payment->setPaymentDate(
+                    $previousDate ?? new \DateTimeImmutable()
+                );
+            }
+
+            // Clear the date if payment is no longer Paid.
+            else {
+                $payment->setPaymentDate(null);
+            }
+
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_payment_index');
+            $this->addFlash(
+                'success',
+                'Payment updated successfully.'
+            );
+
+            return $this->redirectToRoute(
+                'app_payment_index'
+            );
         }
 
-        $payments = $paymentRepository->findAll();
+        // Reopen the correct Edit modal on validation errors.
+        $payments = $paymentRepository->findBy(
+            [],
+            ['id' => 'DESC']
+        );
 
         $addForm = $this->createForm(
             PaymentType::class,
@@ -160,30 +209,12 @@ final class PaymentController extends AbstractController
             ]
         );
 
-        $editForms = [];
-
-        foreach ($payments as $existingPayment) {
-            $id = $existingPayment->getId();
-
-            if ($id === $payment->getId()) {
-                $editForms[$id] = $form->createView();
-            } else {
-                $otherForm = $formFactory->createNamed(
-                    'payment_edit_' . $id,
-                    PaymentType::class,
-                    $existingPayment,
-                    [
-                        'action' => $this->generateUrl(
-                            'app_payment_edit',
-                            ['id' => $id]
-                        ),
-                        'method' => 'POST',
-                    ]
-                );
-
-                $editForms[$id] = $otherForm->createView();
-            }
-        }
+        $editForms = $this->buildEditForms(
+            $payments,
+            $formFactory,
+            $payment->getId(),
+            $form
+        );
 
         return $this->render('payment/index.html.twig', [
             'payments' => $payments,
@@ -207,8 +238,69 @@ final class PaymentController extends AbstractController
         )) {
             $entityManager->remove($payment);
             $entityManager->flush();
+
+            $this->addFlash(
+                'success',
+                'Payment deleted successfully.'
+            );
         }
 
-        return $this->redirectToRoute('app_payment_index');
+        return $this->redirectToRoute(
+            'app_payment_index'
+        );
+    }
+
+    // ================= AUTOMATIC PAYMENT DATE =================
+
+    private function updatePaymentDate(Payment $payment): void
+    {
+        if ($payment->getPaymentStatus() === 'Paid') {
+            $payment->setPaymentDate(
+                new \DateTimeImmutable()
+            );
+        } else {
+            $payment->setPaymentDate(null);
+        }
+    }
+
+    // ================= BUILD EDIT FORMS =================
+
+    private function buildEditForms(
+        array $payments,
+        FormFactoryInterface $formFactory,
+        ?int $submittedPaymentId = null,
+        $submittedForm = null
+    ): array {
+        $editForms = [];
+
+        foreach ($payments as $existingPayment) {
+            $id = $existingPayment->getId();
+
+            if (
+                $submittedPaymentId !== null &&
+                $id === $submittedPaymentId &&
+                $submittedForm !== null
+            ) {
+                $editForms[$id] = $submittedForm->createView();
+                continue;
+            }
+
+            $editForm = $formFactory->createNamed(
+                'payment_edit_' . $id,
+                PaymentType::class,
+                $existingPayment,
+                [
+                    'action' => $this->generateUrl(
+                        'app_payment_edit',
+                        ['id' => $id]
+                    ),
+                    'method' => 'POST',
+                ]
+            );
+
+            $editForms[$id] = $editForm->createView();
+        }
+
+        return $editForms;
     }
 }
