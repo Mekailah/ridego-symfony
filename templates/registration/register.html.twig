@@ -1,0 +1,266 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Register Admin | RideGo{% endblock %}
+
+{% block body %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(
+            135deg,
+            #0E1B2A 0%,
+            #142e4b 60%,
+            #3C9995 100%
+        );
+        font-family: Arial, sans-serif;
+    }
+
+    .ridego-register-wrapper {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 24px;
+        box-sizing: border-box;
+    }
+
+    .ridego-register-card {
+        background: #fff;
+        width: 100%;
+        max-width: 450px;
+        padding: 38px 36px;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    }
+
+    .ridego-brand {
+        text-align: center;
+        margin-bottom: 28px;
+    }
+
+    .ridego-logo {
+        font-family: 'Poppins', Arial, sans-serif;
+        font-size: 36px;
+        font-weight: 700;
+        color: #0E1B2A;
+        letter-spacing: -1px;
+        line-height: 1.2;
+    }
+
+    .ridego-logo span {
+        color: #3C9995;
+    }
+
+    .ridego-subtitle {
+        font-family: Arial, sans-serif;
+        color: #718096;
+        font-size: 12px;
+        font-weight: 400;
+        letter-spacing: 3px;
+        margin-top: 12px;
+    }
+
+    .ridego-register-title {
+        font-size: 21px;
+        font-weight: 700;
+        color: #152b43;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+
+    .ridego-register-description {
+        color: #718096;
+        font-size: 13px;
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+    .ridego-register-form label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #34465b;
+        margin-bottom: 8px;
+    }
+
+    .ridego-register-form input[type="email"],
+    .ridego-register-form input[type="text"],
+    .ridego-register-form input[type="password"] {
+        display: block;
+        width: 100%;
+        padding: 13px 14px;
+        border: 1px solid #d6dfe8;
+        border-radius: 8px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        box-sizing: border-box;
+        background: #fff;
+    }
+
+    .ridego-register-form input:focus {
+        outline: none;
+        border-color: #3C9995;
+        box-shadow: 0 0 0 3px rgba(60, 153, 149, 0.12);
+    }
+
+    .ridego-field {
+        margin-bottom: 20px;
+    }
+
+    .ridego-terms {
+        margin-bottom: 22px;
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+    }
+
+    .ridego-terms input {
+        margin-top: 3px;
+        accent-color: #3C9995;
+    }
+
+    .ridego-terms label {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 400;
+        color: #34465b;
+    }
+
+    .ridego-register-button {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        background: #3C9995;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .ridego-register-button:hover {
+        background: #307F7C;
+    }
+
+    .ridego-cancel-button {
+        display: block;
+        margin-top: 12px;
+        padding: 12px;
+        text-align: center;
+        text-decoration: none;
+        background: #edf1f5;
+        color: #34465b;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .ridego-cancel-button:hover {
+        background: #dfe5eb;
+        color: #0E1B2A;
+    }
+
+    .ridego-register-form .invalid-feedback,
+    .ridego-register-form .form-error-message,
+    .ridego-register-form ul,
+    .ridego-form-errors {
+        color: #b42318;
+        font-size: 13px;
+        margin-top: 6px;
+    }
+
+    .ridego-register-footer {
+        margin-top: 24px;
+        text-align: center;
+        color: #8995a4;
+        font-size: 12px;
+    }
+
+    @media (max-width: 480px) {
+        .ridego-register-card {
+            padding: 30px 22px;
+        }
+    }
+</style>
+
+<div class="ridego-register-wrapper">
+    <div class="ridego-register-card">
+
+        <div class="ridego-brand">
+            <div class="ridego-logo">RIDE<span>GO</span></div>
+            <div class="ridego-subtitle">DRIVE YOUR JOURNEY</div>
+        </div>
+
+        <h1 class="ridego-register-title">Register Administrator</h1>
+
+        <p class="ridego-register-description">
+            Create a new RideGo administrator account.
+        </p>
+
+        <div class="ridego-register-form">
+
+            <div class="ridego-form-errors">
+                {{ form_errors(registrationForm) }}
+            </div>
+
+            {{ form_start(registrationForm) }}
+
+                <div class="ridego-field">
+                    {{ form_label(registrationForm.email, 'Email Address') }}
+                    {{ form_widget(registrationForm.email, {
+                        attr: {
+                            placeholder: 'Enter admin email',
+                            autocomplete: 'email'
+                        }
+                    }) }}
+                    {{ form_errors(registrationForm.email) }}
+                </div>
+
+                <div class="ridego-field">
+                    {{ form_label(registrationForm.plainPassword, 'Password') }}
+                    {{ form_widget(registrationForm.plainPassword, {
+                        attr: {
+                            placeholder: 'Create a password',
+                            autocomplete: 'new-password'
+                        }
+                    }) }}
+                    {{ form_errors(registrationForm.plainPassword) }}
+                </div>
+
+                <div class="ridego-terms">
+                    {{ form_widget(registrationForm.agreeTerms) }}
+                    {{ form_label(registrationForm.agreeTerms, 'I agree to the terms') }}
+                </div>
+
+                {{ form_errors(registrationForm.agreeTerms) }}
+
+                <button type="submit" class="ridego-register-button">
+                    Create Admin Account
+                </button>
+
+                <a href="{{ path('admin_dashboard') }}"
+                   class="ridego-cancel-button">
+                    Cancel
+                </a>
+
+            {{ form_end(registrationForm) }}
+
+        </div>
+
+        <div class="ridego-register-footer">
+            &copy; {{ "now"|date("Y") }} RideGo. Admin access only.
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

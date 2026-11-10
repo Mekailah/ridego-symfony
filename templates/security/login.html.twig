@@ -1,0 +1,225 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin Login | RideGo{% endblock %}
+
+{% block body %}
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #0b1730 0%, #142e4b 60%, #126e79 100%);
+    }
+
+    .ridego-login-wrapper {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 24px;
+        box-sizing: border-box;
+    }
+
+    .ridego-login-card {
+        background: #ffffff;
+        width: 100%;
+        max-width: 430px;
+        border-radius: 16px;
+        padding: 40px 36px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    }
+
+    .ridego-brand {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
+    .ridego-logo {
+        font-family: 'Poppins', 'Arial', sans-serif;
+        font-size: 36px;
+        font-weight: 700;
+        color: #102b46;
+        letter-spacing: -1px;
+        line-height: 1.2;
+    }
+
+    .ridego-logo span {
+        color: #0c9ca4;
+    }
+
+    .ridego-subtitle {
+        font-family: 'Arial', sans-serif;
+        color: #718096;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 3px;
+        margin-top: 12px;
+    }
+
+    .ridego-login-title {
+        font-size: 21px;
+        font-weight: 700;
+        color: #152b43;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .ridego-form-group {
+        margin-bottom: 20px;
+    }
+
+    .ridego-form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #34465b;
+        margin-bottom: 8px;
+    }
+
+    .ridego-form-control {
+        display: block;
+        width: 100%;
+        padding: 13px 14px;
+        border: 1px solid #d6dfe8;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+        background: #fff;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .ridego-form-control:focus {
+        outline: none;
+        border-color: #0c9ca4;
+        box-shadow: 0 0 0 3px rgba(12, 156, 164, 0.12);
+    }
+
+    .ridego-login-button {
+        width: 100%;
+        padding: 14px;
+        background: #0c8e99;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 8px;
+        transition: background 0.2s;
+    }
+
+    .ridego-login-button:hover {
+        background: #08747e;
+    }
+
+    .ridego-login-error {
+        padding: 12px 14px;
+        background: #fff0f0;
+        border: 1px solid #f2b5b5;
+        border-radius: 8px;
+        color: #b42318;
+        font-size: 13px;
+        margin-bottom: 20px;
+    }
+
+    .ridego-login-footer {
+        margin-top: 28px;
+        text-align: center;
+        color: #8995a4;
+        font-size: 12px;
+    }
+
+    @media (max-width: 480px) {
+        .ridego-login-card {
+            padding: 30px 22px;
+        }
+    }
+</style>
+
+<div class="ridego-login-wrapper">
+    <div class="ridego-login-card">
+
+        <div class="ridego-brand">
+            <div class="ridego-logo">RIDE<span>GO</span></div>
+            <div class="ridego-subtitle">DRIVE YOUR JOURNEY</div>
+        </div>
+
+        <h1 class="ridego-login-title">Admin Login</h1>
+
+        {% if error %}
+            <div class="ridego-login-error" role="alert">
+                {{ error.messageKey|trans(error.messageData, 'security') }}
+            </div>
+        {% endif %}
+
+        {% if app.user %}
+            <div class="ridego-form-group" style="text-align:center;">
+                Already signed in as
+                <strong>{{ app.user.userIdentifier }}</strong>.
+                <a href="{{ path('admin_dashboard') }}">Go to Dashboard</a>
+                or
+                <a href="{{ path('app_logout') }}">Logout</a>.
+            </div>
+        {% else %}
+
+            <form method="post" action="{{ path('app_login') }}">
+
+                <div class="ridego-form-group">
+                    <label for="username" class="ridego-form-label">
+                        Email Address
+                    </label>
+
+                    <input
+                        type="email"
+                        name="_username"
+                        id="username"
+                        class="ridego-form-control"
+                        value="{{ last_username }}"
+                        placeholder="Enter your admin email"
+                        autocomplete="email"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <div class="ridego-form-group">
+                    <label for="password" class="ridego-form-label">
+                        Password
+                    </label>
+
+                    <input
+                        type="password"
+                        name="_password"
+                        id="password"
+                        class="ridego-form-control"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+
+                <input
+                    type="hidden"
+                    name="_csrf_token"
+                    data-controller="csrf-protection"
+                    value="{{ csrf_token('authenticate') }}"
+                >
+
+                <button type="submit" class="ridego-login-button">
+                    Sign In
+                </button>
+
+            </form>
+
+        {% endif %}
+
+        <div class="ridego-login-footer">
+            &copy; {{ "now"|date("Y") }} RideGo. Admin access only.
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

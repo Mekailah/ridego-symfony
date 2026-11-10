@@ -184,7 +184,7 @@
             background: #dbeafe;
             color: #1d4ed8;
         }
-
+ 
         .form-container {
             background: white;
             padding: 30px;
@@ -438,6 +438,7 @@
         <h1>RIDE<span>GO</span></h1>
         <p>DRIVE YOUR JOURNEY</p>
     </div>
+    
 
     <nav>
 
@@ -470,9 +471,25 @@
     </nav>
 
     <div class="logout">
-        <a href="#">
+
+        <a href="{{ path('app_register') }}"
+        style="display: block; color: #3C9995; margin-bottom: 18px; font-size: 14px;">
+            Register Admin
+        </a>
+
+        {% if app.user %}
+            <div style="color: #9ca3af; font-size: 12px; margin-bottom: 12px; overflow-wrap: anywhere;">
+                Logged in as:
+                <strong style="display: block; color: white; margin-top: 4px;">
+                    {{ app.user.userIdentifier }}
+                </strong>
+            </div>
+        {% endif %}
+
+        <a href="{{ path('app_logout') }}">
             Logout
         </a>
+
     </div>
 
 </div>
