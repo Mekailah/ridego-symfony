@@ -58,6 +58,23 @@
         <h2>₱{{ totalRevenue|number_format(2, '.', ',') }}</h2>
     </div>
 
+    {# ================= USER STATISTICS ================= #}
+
+    <div class="card user-stat-card">
+        <h3>Total Users</h3>
+        <h2>{{ totalUsers }}</h2>
+    </div>
+
+    <div class="card staff-stat-card">
+        <h3>Total Staff</h3>
+        <h2>{{ totalStaff }}</h2>
+    </div>
+
+    <div class="card admin-stat-card">
+        <h3>Total Admins</h3>
+        <h2>{{ totalAdmins }}</h2>
+    </div>
+
 </div>
 
 {# ================= RECENT BOOKINGS ================= #}
@@ -233,6 +250,27 @@
             align-items: flex-start;
             flex-direction: column;
         }
+    }
+
+    /* ACCOUNT STATISTICS — SOFT NAVY */
+
+    .dashboard-cards .user-stat-card,
+    .dashboard-cards .staff-stat-card,
+    .dashboard-cards .admin-stat-card {
+        background-color: #1d2d3f;
+        border: 1px solid #D4DEE8;
+    }
+
+    .dashboard-cards .user-stat-card h3,
+    .dashboard-cards .staff-stat-card h3,
+    .dashboard-cards .admin-stat-card h3 {
+        color: #e4e7ea;
+    }
+
+    .dashboard-cards .user-stat-card h2,
+    .dashboard-cards .staff-stat-card h2,
+    .dashboard-cards .admin-stat-card h2 {
+        color: #e4e7ea;
     }
 </style>
 

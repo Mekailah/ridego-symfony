@@ -19,6 +19,7 @@ class MotorcycleController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager
     ): Response {
+          // Load the correct motorcycle records for the table.
         $motorcycles = $entityManager
             ->getRepository(Motorcycle::class)
             ->findAll();
@@ -89,6 +90,7 @@ class MotorcycleController extends AbstractController
         ]);
     }
 
+    
     #[Route('/admin/motorcycles/{id}/edit', name: 'admin_motorcycle_edit')]
     public function edit(
         Motorcycle $motorcycle,
@@ -99,7 +101,6 @@ class MotorcycleController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Keep the existing image if no new file is selected.
             $this->saveMotorcycleImage($form->get('image')->getData(), $motorcycle);
 
             $entityManager->flush();
@@ -109,9 +110,50 @@ class MotorcycleController extends AbstractController
             return $this->redirectToRoute('admin_motorcycles');
         }
 
-        return $this->render('motorcycle/edit.html.twig', [
-            'form' => $form,
-            'motorcycle' => $motorcycle,
+        // Preserve the submitted values and validation errors.
+        $invalidFormView = $form->createView();
+
+        // Restore the original motorcycle values for the table.
+        $entityManager->refresh($motorcycle);
+
+        // Load motorcycle records.
+        $motorcycles = $entityManager
+            ->getRepository(Motorcycle::class)
+            ->findAll();
+
+        $editForms = [];
+
+        foreach ($motorcycles as $existingMotorcycle) {
+            if ($existingMotorcycle->getId() === $motorcycle->getId()) {
+                // Preserve the submitted values and validation errors.
+                $editForms[$existingMotorcycle->getId()] = $invalidFormView;
+            } else {
+                $editForm = $this->createForm(
+                    MotorcycleType::class,
+                    $existingMotorcycle,
+                    [
+                        'action' => $this->generateUrl(
+                            'admin_motorcycle_edit',
+                            ['id' => $existingMotorcycle->getId()]
+                        ),
+                        'method' => 'POST',
+                    ]
+                );
+
+                $editForms[$existingMotorcycle->getId()] = $editForm->createView();
+            }
+        }
+
+        $addForm = $this->createForm(
+            MotorcycleType::class,
+            new Motorcycle()
+        );
+
+        return $this->render('motorcycle/index.html.twig', [
+            'motorcycles' => $motorcycles,
+            'form' => $addForm->createView(),
+            'editForms' => $editForms,
+            'openEditModalId' => $motorcycle->getId(),
         ]);
     }
 
@@ -127,6 +169,8 @@ class MotorcycleController extends AbstractController
         )) {
             $entityManager->remove($motorcycle);
             $entityManager->flush();
+
+            $this->addFlash('success', 'Motorcycle deleted successfully.');
         }
 
         return $this->redirectToRoute('admin_motorcycles');

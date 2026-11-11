@@ -4,6 +4,20 @@
 
 {% block body %}
 
+{# ========== SUCCESS NOTIFICATION ========== #}
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success alert-dismissible fade show booking-alert"
+         role="alert">
+        {{ message }}
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Close">
+        </button>
+    </div>
+{% endfor %}
+
 {% for message in app.flashes('error') %}
     <div class="alert alert-danger alert-dismissible fade show booking-alert" role="alert">
         {{ message }}
@@ -315,7 +329,25 @@
 
                     {% elseif booking.returned %}
 
-                        <span class="status available">Returned</span>
+                        <form
+                            method="post"
+                            action="{{ path('admin_booking_delete', {'id': booking.id}) }}"
+                            id="booking-delete-form-{{ booking.id }}"
+                            style="margin: 0;">
+
+                            <input
+                                type="hidden"
+                                name="_token"
+                                value="{{ csrf_token('delete' ~ booking.id) }}">
+
+                            <button
+                                type="button"
+                                class="delete-btn"
+                                style="border: none; cursor: pointer;"
+                                onclick="openBookingDeleteModal({{ booking.id }})">
+                                Delete
+                            </button>
+                        </form>
 
                     {% endif %}
                 </td>
@@ -391,6 +423,17 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+
+        // Automatically open the original modal when redirected from /admin/bookings/new
+        const params = new URLSearchParams(window.location.search);
+
+        if (params.get('add') === '1') {
+            const modalElement = document.getElementById('addBookingModal');
+
+            if (modalElement && typeof bootstrap !== 'undefined') {
+                bootstrap.Modal.getOrCreateInstance(modalElement).show();
+            }
+        }
 
         // Customer information for Add Booking modal
         const customers = {{ customerDetails|json_encode|raw }};
@@ -510,7 +553,7 @@
 
     .booking-table-scroll th,
     .booking-table-scroll td {
-        padding: 18px 14px;
+        padding: 10px 12px;
         text-align: left;
         vertical-align: middle;
         white-space: nowrap;
@@ -563,6 +606,33 @@
     .booking-table-scroll .booking-actions form {
         margin: 0;
     }
+
+    /* Compact Booking Management table */
+
+    .table-container th,
+    .table-container td {
+        padding: 12px 14px;
+        vertical-align: middle;
+        font-size: 14px;
+    }
+
+    .table-container th {
+        font-weight: 600;
+    }
+
+    .table-container tr {
+        height: auto;
+    }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.booking-alert').forEach(function (alert) {
+        setTimeout(function () {
+            bootstrap.Alert.getOrCreateInstance(alert).close();
+        }, 3000);
+    });
+});
+</script>
 
 {% endblock %}

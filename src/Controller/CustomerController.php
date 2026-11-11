@@ -89,6 +89,7 @@ public function new(
     if ($form->isSubmitted() && $form->isValid()) {
         $entityManager->persist($customer);
         $entityManager->flush();
+        $this->addFlash('success', 'Customer added successfully.');
 
         return $this->redirectToRoute(
             'app_customer_index',
@@ -156,6 +157,8 @@ public function new(
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
+
+            $this->addFlash('success', 'Customer updated successfully.');
 
             return $this->redirectToRoute(
                 'app_customer_index',
@@ -225,6 +228,8 @@ public function new(
         )) {
             $entityManager->remove($customer);
             $entityManager->flush();
+
+            $this->addFlash('success', 'Customer deleted successfully.');
         }
 
         return $this->redirectToRoute(

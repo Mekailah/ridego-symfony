@@ -50,6 +50,7 @@ class BookingController extends AbstractController
             return $this->bookingError('Invalid security token.');
         }
 
+        // Only Pending bookings can be confirmed.
         if ($booking->getStatus() !== 'Pending') {
             return $this->bookingError(
                 'Only pending bookings can be confirmed.'
@@ -68,11 +69,20 @@ class BookingController extends AbstractController
             );
         }
 
-        $motorcycle = $entityManager
-            ->getRepository(Motorcycle::class)
-            ->findOneBy([
-                'name' => $booking->getMotorcycleName(),
-            ]);
+        $motorcycle = $booking->getMotorcycle();
+
+        // Fallback for older bookings.
+        if ($motorcycle === null) {
+            $motorcycle = $entityManager
+                ->getRepository(Motorcycle::class)
+                ->findOneBy([
+                    'name' => $booking->getMotorcycleName(),
+                ]);
+
+            if ($motorcycle !== null) {
+                $booking->setMotorcycle($motorcycle);
+            }
+        }
 
         if (!$motorcycle || $motorcycle->getAvailableUnits() <= 0) {
             return $this->bookingError(
@@ -93,6 +103,8 @@ class BookingController extends AbstractController
         $booking->setStatus('Confirmed');
 
         $entityManager->flush();
+
+        $this->addFlash('success', 'Booking confirmed successfully.');
 
         return $this->redirectToRoute('admin_bookings');
     }
@@ -116,11 +128,20 @@ class BookingController extends AbstractController
             );
         }
 
-        $motorcycle = $entityManager
-            ->getRepository(Motorcycle::class)
-            ->findOneBy([
-                'name' => $booking->getMotorcycleName(),
-            ]);
+        $motorcycle = $booking->getMotorcycle();
+
+        // Fallback for older bookings.
+        if ($motorcycle === null) {
+            $motorcycle = $entityManager
+                ->getRepository(Motorcycle::class)
+                ->findOneBy([
+                    'name' => $booking->getMotorcycleName(),
+                ]);
+
+            if ($motorcycle !== null) {
+                $booking->setMotorcycle($motorcycle);
+            }
+        }
 
         if (!$motorcycle) {
             return $this->bookingError(
@@ -144,6 +165,8 @@ class BookingController extends AbstractController
         $booking->setStatus('Returned');
         $booking->setReturnedAt(new \DateTimeImmutable());
 
+        $this->addFlash('success', 'Motorcycle returned successfully.');
+
         $entityManager->flush();
 
         return $this->redirectToRoute('admin_bookings');
@@ -162,9 +185,10 @@ class BookingController extends AbstractController
             return $this->bookingError('Invalid security token.');
         }
 
-        if ($booking->getStatus() !== 'Pending') {
+        // Allow deleting Pending and Returned bookings only.
+        if (!in_array($booking->getStatus(), ['Pending', 'Returned'], true)) {
             return $this->bookingError(
-                'Only pending bookings can be deleted.'
+                'Only pending or returned bookings can be deleted.'
             );
         }
 
@@ -176,6 +200,8 @@ class BookingController extends AbstractController
         $entityManager->remove($booking);
         $entityManager->flush();
 
+        $this->addFlash('success', 'Booking deleted successfully.');
+
         return $this->redirectToRoute('admin_bookings');
     }
 
@@ -184,6 +210,13 @@ class BookingController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager
     ): Response {
+        // Show the original Add Booking popup for GET requests.
+        if ($request->isMethod('GET')) {
+            return $this->redirectToRoute('admin_bookings', [
+                'add' => '1',
+            ]);
+        }
+
         $booking = new Booking();
 
         $form = $this->createForm(BookingType::class, $booking, [
@@ -214,6 +247,8 @@ class BookingController extends AbstractController
                     'Selected motorcycle is no longer available.'
                 );
             }
+
+            $booking->setMotorcycle($motorcycle);
 
             $pickupDate = $booking->getPickupDate();
             $returnDate = $booking->getReturnDate();
@@ -248,6 +283,8 @@ class BookingController extends AbstractController
 
             $entityManager->persist($payment);
             $entityManager->flush();
+
+            $this->addFlash('success', 'Booking added successfully.');
 
             return $this->redirectToRoute('admin_bookings');
         }

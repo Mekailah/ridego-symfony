@@ -1,0 +1,64 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Edit User | RideGo{% endblock %}
+
+{% block body %}
+
+<div class="page-header">
+    <div>
+        <h1>Edit User</h1>
+        <p>Update the account details for {{ user.username ?: user.email }}.</p>
+    </div>
+</div>
+
+<div class="form-container">
+
+    {{ form_start(form) }}
+    {{ form_errors(form) }}
+
+        <div class="form-group">
+            {{ form_label(form.fullName) }}
+            {{ form_widget(form.fullName) }}
+            {{ form_errors(form.fullName) }}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(form.username) }}
+            {{ form_widget(form.username) }}
+            {{ form_errors(form.username) }}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(form.email) }}
+            {{ form_widget(form.email) }}
+            {{ form_errors(form.email) }}
+        </div>
+
+        <div class="form-group">
+            {{ form_label(form.isActive) }}
+            {{ form_widget(form.isActive) }}
+            {{ form_errors(form.isActive) }}
+        </div>
+
+        <div class="form-group">
+            <label>Role</label>
+            <input type="text"
+                value="{{ 'ROLE_ADMIN' in user.roles ? 'Admin' : 'Staff' }}"
+                readonly>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ path('admin_users') }}" class="cancel-btn">
+                Cancel
+            </a>
+
+            <button type="submit" class="save-btn">
+                Save Changes
+            </button>
+        </div>
+
+    {{ form_end(form) }}
+
+</div>
+
+{% endblock %}

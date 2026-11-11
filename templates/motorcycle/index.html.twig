@@ -3,9 +3,22 @@
 
 {% block title %}Motorcycles | RideGo{% endblock %}
 
+
 {% block body %}
 
+{# ========== SUCCESS NOTIFICATION ========== #}
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success alert-dismissible fade show motorcycle-alert"
+         role="alert">
+        {{ message }}
 
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Close">
+        </button>
+    </div>
+{% endfor %}
 
 {# ========== ERROR NOTIFICATION ========== #}
 
@@ -65,7 +78,11 @@
 
             <div class="modal-body">
 
-                {{ form_start(form) }}
+                {{ form_start(form, {
+                    'attr': {
+                        'data-turbo': 'false'
+                    }
+                }) }}
 
                 <div class="mb-3">
                     {{ form_label(form.name, 'Motorcycle Name') }}
@@ -155,7 +172,11 @@
                 </button>
             </div>
 
-            {{ form_start(editForms[motorcycle.id]) }}
+            {{ form_start(editForms[motorcycle.id], {
+                'attr': {
+                    'data-turbo': 'false'
+                }
+            }) }}
 
             <div class="modal-body">
 
@@ -410,5 +431,21 @@
     });
 
 </script>
+
+
+{% if openEditModalId is defined and openEditModalId %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modalElement = document.getElementById(
+                'editMotorcycleModal{{ openEditModalId }}'
+            );
+
+            if (modalElement) {
+                bootstrap.Modal.getOrCreateInstance(modalElement).show();
+            }
+        });
+    </script>
+{% endif %}
+
 
 {% endblock %}

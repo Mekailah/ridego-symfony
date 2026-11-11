@@ -7,7 +7,6 @@ security:
         app_user_provider:
             entity:
                 class: App\Entity\User
-                property: email
 
     firewalls:
         dev:
@@ -17,24 +16,36 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            user_checker: App\Security\UserChecker
 
             form_login:
                 login_path: app_login
                 check_path: app_login
                 enable_csrf: true
-                default_target_path: admin_dashboard
-                always_use_default_target_path: true
+                success_handler: App\Security\LoginSuccessHandler
 
             logout:
                 path: app_logout
                 target: app_login
 
+    
     access_control:
         - { path: ^/login$, roles: PUBLIC_ACCESS }
+
+        # Admin-only pages
         - { path: ^/register$, roles: ROLE_ADMIN }
+        - { path: ^/admin/staff(?:/|$), roles: ROLE_ADMIN }
+        - { path: ^/admin/dashboard$, roles: ROLE_ADMIN }
+
+        # Shared Admin and Staff management pages
+        - { path: ^/admin/bookings(?:/|$), roles: [ROLE_ADMIN, ROLE_STAFF] }
+        - { path: ^/admin/motorcycles(?:/|$), roles: [ROLE_ADMIN, ROLE_STAFF] }
+        - { path: ^/customer(?:/|$), roles: [ROLE_ADMIN, ROLE_STAFF] }
+        - { path: ^/payment(?:/|$), roles: [ROLE_ADMIN, ROLE_STAFF] }
+
+        # All other Admin pages remain Admin-only
         - { path: ^/admin(?:/|$), roles: ROLE_ADMIN }
-        - { path: ^/customer(?:/|$), roles: ROLE_ADMIN }
-        - { path: ^/payment(?:/|$), roles: ROLE_ADMIN }
+
 
 when@test:
     security:

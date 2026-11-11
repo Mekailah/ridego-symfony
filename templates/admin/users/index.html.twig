@@ -1,0 +1,442 @@
+
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}User Management | RideGo{% endblock %}
+
+{% block body %}
+
+{# ========== SUCCESS NOTIFICATION ========== #}
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success alert-dismissible fade show user-alert"
+         role="alert">
+        {{ message }}
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Close">
+        </button>
+    </div>
+{% endfor %}
+
+{# ========== ERROR NOTIFICATION ========== #}
+{% for message in app.flashes('error') %}
+    <div class="alert alert-danger alert-dismissible fade show user-alert"
+         role="alert">
+        {{ message }}
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Close">
+        </button>
+    </div>
+{% endfor %}
+
+<div class="page-header">
+    <div>
+        <h1>User Management</h1>
+        <p>View and manage registered Admin and Staff accounts.</p>
+    </div>
+</div>
+
+{# ================= USER TABLE ================= #}
+
+<div class="table-container">
+    <table class="users-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Full Name</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.fullName ?: '—' }}</td>
+                    <td>{{ user.username ?: '—' }}</td>
+                    <td>{{ user.email }}</td>
+
+                    <td>
+                        {% if 'ROLE_ADMIN' in user.roles %}
+                            Admin
+                        {% elseif 'ROLE_STAFF' in user.roles %}
+                            Staff
+                        {% else %}
+                            User
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if user.isActive %}
+                            <span style="color: #198754; font-weight: 600;">
+                                Active
+                            </span>
+                        {% else %}
+                            <span style="color: #dc3545; font-weight: 600;">
+                                Disabled
+                            </span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <div class="actions">
+                            <button type="button"
+                                    class="edit-btn"
+                                    style="border: none; cursor: pointer;"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editUserModal{{ user.id }}">
+                                Edit
+                            </button>
+
+                            {% if app.user.id != user.id %}
+                                <button
+                                    type="button"
+                                    class="user-delete-btn"
+                                    onclick="openUserDeleteModal({{ user.id }})">
+                                    Delete
+                                </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center;">
+                        No registered users found.
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{# ================= EDIT USER MODALS ================= #}
+
+{% for user in users %}
+
+<div class="modal fade"
+     id="editUserModal{{ user.id }}"
+     tabindex="-1"
+     aria-labelledby="editUserModalLabel{{ user.id }}"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title"
+                    id="editUserModalLabel{{ user.id }}">
+                    Edit User
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            {{ form_start(editForms[user.id]) }}
+
+            <div class="modal-body">
+
+                {{ form_errors(editForms[user.id]) }}
+
+                <div class="mb-3">
+                    {{ form_label(editForms[user.id].fullName) }}
+                    {{ form_widget(editForms[user.id].fullName, {
+                        'attr': {'class': 'form-control'}
+                    }) }}
+                    {{ form_errors(editForms[user.id].fullName) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(editForms[user.id].username) }}
+                    {{ form_widget(editForms[user.id].username, {
+                        'attr': {'class': 'form-control'}
+                    }) }}
+                    {{ form_errors(editForms[user.id].username) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(editForms[user.id].email) }}
+                    {{ form_widget(editForms[user.id].email, {
+                        'attr': {'class': 'form-control'}
+                    }) }}
+                    {{ form_errors(editForms[user.id].email) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(editForms[user.id].isActive) }}
+                    {{ form_widget(editForms[user.id].isActive, {
+                        'attr': {'class': 'form-select'}
+                    }) }}
+                    {{ form_errors(editForms[user.id].isActive) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(editForms[user.id].roles) }}
+                    {{ form_widget(editForms[user.id].roles, {
+                        'attr': {'class': 'form-select'}
+                    }) }}
+                    {{ form_errors(editForms[user.id].roles) }}
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <button type="submit"
+                        class="btn"
+                        style="background-color: #3C9995; color: white; ">
+                    Save Changes
+                </button>
+
+            </div>
+
+            {{ form_widget(editForms[user.id]._token) }}
+            {{ form_end(editForms[user.id], {'render_rest': false}) }}
+
+        </div>
+    </div>
+</div>
+
+{% endfor %}
+
+{# ================= DELETE USER MODALS ================= #}
+
+{% for user in users %}
+    {% if app.user.id != user.id %}
+
+        <div id="user-delete-modal-{{ user.id }}"
+             class="user-modal-overlay"
+             hidden>
+
+            <div class="user-modal-box"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="user-delete-title-{{ user.id }}">
+
+                <h2 id="user-delete-title-{{ user.id }}">
+                    Delete User?
+                </h2>
+
+                <p>
+                    Are you sure you want to delete {{ user.username ?: user.email }}?
+                </p>
+
+                <div class="user-modal-actions">
+
+                    <button
+                        type="button"
+                        class="user-cancel-btn"
+                        onclick="closeUserDeleteModal({{ user.id }})">
+                        Cancel
+                    </button>
+
+                    <form method="post"
+                          action="{{ path('admin_users_delete', {id: user.id}) }}">
+
+                        <input
+                            type="hidden"
+                            name="_token"
+                            value="{{ csrf_token('delete_user_' ~ user.id) }}">
+
+                        <button
+                            type="submit"
+                            class="user-confirm-delete-btn">
+                            Delete
+                        </button>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+    {% endif %}
+{% endfor %}
+
+{# ================= CSS ================= #}
+
+<style>
+
+    /* USER TABLE */
+
+    .users-table {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    .users-table th:nth-child(1) { width: 5%; }
+    .users-table th:nth-child(2) { width: 18%; }
+    .users-table th:nth-child(3) { width: 15%; }
+    .users-table th:nth-child(4) { width: 25%; }
+    .users-table th:nth-child(5) { width: 10%; }
+    .users-table th:nth-child(6) { width: 10%; }
+    .users-table th:nth-child(7) { width: 17%; }
+
+    .users-table td {
+        overflow-wrap: anywhere;
+    }
+
+    /* EDIT AND DELETE BUTTONS */
+
+    .table-container .edit-btn,
+    .table-container .user-delete-btn {
+        display: inline-block;
+        padding: 7px 12px;
+        font-size: 13px;
+        font-weight: 400;
+        line-height: normal;
+        border: none;
+        border-radius: 6px;
+        text-decoration: none;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .table-container .edit-btn {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .table-container .user-delete-btn {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .table-container .edit-btn:hover {
+        background: #bfdbfe;
+    }
+
+    .table-container .user-delete-btn:hover {
+        background: #fecaca;
+    }
+
+    /* DELETE MODAL OVERLAY */
+
+    .user-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .user-modal-overlay[hidden] {
+        display: none;
+    }
+
+    /* DELETE MODAL BOX */
+
+    .user-modal-box {
+        background: white;
+        width: 420px;
+        max-width: 90%;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .user-modal-box h2 {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0 0 10px;
+        color: #111827;
+    }
+
+    .user-modal-box p {
+        font-size: 15px;
+        color: #6b7280;
+        line-height: 1.5;
+        margin: 0 0 25px;
+    }
+
+    /* MODAL ACTION BUTTONS */
+
+    .user-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .user-modal-actions form {
+        margin: 0;
+    }
+
+    .user-cancel-btn,
+    .user-confirm-delete-btn {
+        border: none;
+        padding: 10px 17px;
+        border-radius: 7px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .user-cancel-btn {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    .user-confirm-delete-btn {
+        background: #dc2626;
+        color: white;
+    }
+
+    .user-cancel-btn:hover {
+        background: #d1d5db;
+    }
+
+    .user-confirm-delete-btn:hover {
+        background: #b91c1c;
+    }
+
+</style>
+
+{# ================= JAVASCRIPT ================= #}
+
+<script>
+
+    function openUserDeleteModal(id) {
+        document.getElementById(
+            'user-delete-modal-' + id
+        ).hidden = false;
+    }
+
+    function closeUserDeleteModal(id) {
+        document.getElementById(
+            'user-delete-modal-' + id
+        ).hidden = true;
+    }
+
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.user-alert').forEach(function (alert) {
+        setTimeout(function () {
+            bootstrap.Alert.getOrCreateInstance(alert).close();
+        }, 3000);
+    });
+});
+</script>
+
+{% endblock %}

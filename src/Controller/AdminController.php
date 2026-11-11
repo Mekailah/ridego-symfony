@@ -6,6 +6,7 @@ use App\Entity\Booking;
 use App\Entity\Customer;
 use App\Entity\Motorcycle;
 use App\Entity\Payment;
+use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -71,7 +72,26 @@ class AdminController extends AbstractController
             $recentBookings = $entityManager
                 ->getRepository(Booking::class)
                 ->findBy([], ['id' => 'DESC'], 5);
-                
+         
+        // USER AND STAFF STATISTICS
+
+        $users = $entityManager
+            ->getRepository(User::class)
+            ->findAll();
+
+        $totalUsers = count($users);
+        $totalStaff = 0;
+        $totalAdmins = 0;
+
+        foreach ($users as $user) {
+            if (in_array('ROLE_STAFF', $user->getRoles(), true)) {
+                $totalStaff++;
+            }
+
+            if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+                $totalAdmins++;
+            }
+        }        
         // SEND STATISTICS TO DASHBOARD
 
         return $this->render('admin/index.html.twig', [
@@ -84,6 +104,9 @@ class AdminController extends AbstractController
             'returnedBookings' => $returnedBookings,
             'totalRevenue' => $totalRevenue,
             'recentBookings' => $recentBookings,
+            'totalUsers' => $totalUsers,
+            'totalStaff' => $totalStaff,
+            'totalAdmins' => $totalAdmins,
         ]);
     }
 }

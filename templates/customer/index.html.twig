@@ -4,6 +4,19 @@
 {% block title %}Customer Management | RideGo{% endblock %}
 
 {% block body %}
+{# ========== SUCCESS NOTIFICATION ========== #}
+{% for message in app.flashes('success') %}
+    <div class="alert alert-success alert-dismissible fade show customer-alert"
+         role="alert">
+        {{ message }}
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Close">
+        </button>
+    </div>
+{% endfor %}
 
 {# ================= PAGE HEADER ================= #}
 
@@ -376,6 +389,16 @@
         {% endif %}
 
     });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.customer-alert').forEach(function (alert) {
+        setTimeout(function () {
+            bootstrap.Alert.getOrCreateInstance(alert).close();
+        }, 3000);
+    });
+});
 </script>
 
 {% endblock %}

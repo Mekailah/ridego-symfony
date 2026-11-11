@@ -1,7 +1,9 @@
 
 {% extends 'base.html.twig' %}
 
-{% block title %}Register Admin | RideGo{% endblock %}
+{% set isStaff = app.request.attributes.get('_route') == 'admin_staff_new' %}
+
+{% block title %}Register {{ isStaff ? 'Staff' : 'Admin' }} | RideGo{% endblock %}
 
 {% block body %}
 
@@ -190,6 +192,14 @@
             padding: 30px 22px;
         }
     }
+
+    .ridego-password-error {
+        color: #dc3545;
+        font-size: 16px;
+        font-weight: 400;
+        margin-top: 6px;
+    }
+
 </style>
 
 <div class="ridego-register-wrapper">
@@ -200,10 +210,12 @@
             <div class="ridego-subtitle">DRIVE YOUR JOURNEY</div>
         </div>
 
-        <h1 class="ridego-register-title">Register Administrator</h1>
+        <h1 class="ridego-register-title">
+            {{ isStaff ? 'Register Staff' : 'Register Administrator' }}
+        </h1>
 
         <p class="ridego-register-description">
-            Create a new RideGo administrator account.
+            Create a new RideGo {{ isStaff ? 'staff' : 'administrator' }} account.
         </p>
 
         <div class="ridego-register-form">
@@ -212,13 +224,40 @@
                 {{ form_errors(registrationForm) }}
             </div>
 
-            {{ form_start(registrationForm) }}
+            {{ form_start(registrationForm, {
+                'attr': {
+                    'novalidate': 'novalidate',
+                    'data-turbo': 'false'
+                }
+            }) }}
 
-                <div class="ridego-field">
-                    {{ form_label(registrationForm.email, 'Email Address') }}
+            <div class="ridego-field">
+                {{ form_label(registrationForm.fullName, 'Full Name') }}
+                {{ form_widget(registrationForm.fullName, {
+                    attr: {
+                        placeholder: 'Enter full name',
+                        autocomplete: 'name'
+                    }
+                }) }}
+                {{ form_errors(registrationForm.fullName) }}
+            </div>
+
+            <div class="ridego-field">
+                {{ form_label(registrationForm.username, 'Username') }}
+                {{ form_widget(registrationForm.username, {
+                    attr: {
+                        placeholder: 'Enter username',
+                        autocomplete: 'nickname'
+                    }
+                }) }}
+                {{ form_errors(registrationForm.username) }}
+            </div>
+
+            <div class="ridego-field">
+                {{ form_label(registrationForm.email, 'Email Address') }}
                     {{ form_widget(registrationForm.email, {
                         attr: {
-                            placeholder: 'Enter admin email',
+                            placeholder: isStaff ? 'Enter staff email' : 'Enter admin email',
                             autocomplete: 'email'
                         }
                     }) }}
@@ -233,7 +272,13 @@
                             autocomplete: 'new-password'
                         }
                     }) }}
-                    {{ form_errors(registrationForm.plainPassword) }}
+                    {% if registrationForm.plainPassword.vars.errors|length > 0 %}
+                        <ul class="text-danger" style="font-size: 14px; padding-left: 35px; margin-top: 6px;">
+                            {% for error in registrationForm.plainPassword.vars.errors %}
+                                <li>{{ error.message }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
                 </div>
 
                 <div class="ridego-terms">
@@ -244,7 +289,7 @@
                 {{ form_errors(registrationForm.agreeTerms) }}
 
                 <button type="submit" class="ridego-register-button">
-                    Create Admin Account
+                    Create {{ isStaff ? 'Staff' : 'Admin' }} Account
                 </button>
 
                 <a href="{{ path('admin_dashboard') }}"

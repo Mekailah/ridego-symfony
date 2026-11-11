@@ -30,6 +30,11 @@ class Booking
     #[ORM\Column(length: 255)]
     private ?string $motorcycleName = null;
 
+    // Many bookings can reference one motorcycle
+    #[ORM\ManyToOne(targetEntity: Motorcycle::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Motorcycle $motorcycle = null;
+
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTime $pickupDate = null;
 
@@ -123,6 +128,18 @@ class Booking
     public function setMotorcycleName(string $motorcycleName): static
     {
         $this->motorcycleName = $motorcycleName;
+
+        return $this;
+    }
+
+    public function getMotorcycle(): ?Motorcycle
+    {
+        return $this->motorcycle;
+    }
+
+    public function setMotorcycle(?Motorcycle $motorcycle): static
+    {
+        $this->motorcycle = $motorcycle;
 
         return $this;
     }
