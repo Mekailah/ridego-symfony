@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Customer;
+use App\Entity\User;
 use App\Form\CustomerType;
 use App\Repository\CustomerRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -11,10 +12,27 @@ use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/customer')]
+#[IsGranted('ROLE_USER')]
 final class CustomerController extends AbstractController
 {
+    // ================= OWNERSHIP CHECK =================
+
+    private function canManageCustomer(Customer $customer): bool
+    {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            return true;
+        }
+
+        $user = $this->getUser();
+
+        return $user instanceof User
+            && $customer->getCreatedBy() !== null
+            && $customer->getCreatedBy()->getId() === $user->getId();
+    }
+
     // ================= CUSTOMER LIST =================
 
     #[Route(name: 'app_customer_index', methods: ['GET'])]
@@ -24,7 +42,6 @@ final class CustomerController extends AbstractController
     ): Response {
         $customers = $customerRepository->findAll();
 
-        // Add Customer form
         $addForm = $this->createForm(
             CustomerType::class,
             new Customer(),
@@ -34,10 +51,13 @@ final class CustomerController extends AbstractController
             ]
         );
 
-        // Unique Edit Customer forms
         $editForms = [];
 
         foreach ($customers as $existingCustomer) {
+            if (!$this->canManageCustomer($existingCustomer)) {
+                continue;
+            }
+
             $editForm = $formFactory->createNamed(
                 'customer_edit_' . $existingCustomer->getId(),
                 CustomerType::class,
@@ -62,73 +82,89 @@ final class CustomerController extends AbstractController
         ]);
     }
 
-
     // ================= ADD CUSTOMER =================
 
-    
-#[Route('/new', name: 'app_customer_new', methods: ['GET', 'POST'])]
-public function new(
-    Request $request,
-    EntityManagerInterface $entityManager,
-    CustomerRepository $customerRepository,
-    FormFactoryInterface $formFactory
-): Response {
-    $customer = new Customer();
+    #[Route('/new', name: 'app_customer_new', methods: ['GET', 'POST'])]
+    public function new(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        CustomerRepository $customerRepository,
+        FormFactoryInterface $formFactory
+    ): Response {
+        $customer = new Customer();
 
-    $form = $this->createForm(
-        CustomerType::class,
-        $customer,
-        [
-            'action' => $this->generateUrl('app_customer_new'),
-            'method' => 'POST',
-        ]
-    );
-
-    $form->handleRequest($request);
-
-    if ($form->isSubmitted() && $form->isValid()) {
-        $entityManager->persist($customer);
-        $entityManager->flush();
-        $this->addFlash('success', 'Customer added successfully.');
-
-        return $this->redirectToRoute(
-            'app_customer_index',
-            [],
-            Response::HTTP_SEE_OTHER
-        );
-    }
-
-    // If validation fails, return to Customer Management
-    $customers = $customerRepository->findAll();
-
-    $editForms = [];
-
-    foreach ($customers as $existingCustomer) {
-        $editForm = $formFactory->createNamed(
-            'customer_edit_' . $existingCustomer->getId(),
+        $form = $this->createForm(
             CustomerType::class,
-            $existingCustomer,
+            $customer,
             [
-                'action' => $this->generateUrl(
-                    'app_customer_edit',
-                    ['id' => $existingCustomer->getId()]
-                ),
+                'action' => $this->generateUrl('app_customer_new'),
                 'method' => 'POST',
             ]
         );
 
-        $editForms[$existingCustomer->getId()] =
-            $editForm->createView();
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $user = $this->getUser();
+
+            if (!$user instanceof User) {
+                throw $this->createAccessDeniedException(
+                    'You must be logged in to add customers.'
+                );
+            }
+
+            // Assign the logged-in user as the creator
+            $customer->setCreatedBy($user);
+
+            $entityManager->persist($customer);
+            $entityManager->flush();
+
+            $this->addFlash(
+                'success',
+                'Customer added successfully.'
+            );
+
+            return $this->redirectToRoute(
+                'app_customer_index',
+                [],
+                Response::HTTP_SEE_OTHER
+            );
+        }
+
+        // Keep validation errors in the Add Customer modal
+        $customers = $customerRepository->findAll();
+
+        $editForms = [];
+
+        foreach ($customers as $existingCustomer) {
+            if (!$this->canManageCustomer($existingCustomer)) {
+                continue;
+            }
+
+            $editForm = $formFactory->createNamed(
+                'customer_edit_' . $existingCustomer->getId(),
+                CustomerType::class,
+                $existingCustomer,
+                [
+                    'action' => $this->generateUrl(
+                        'app_customer_edit',
+                        ['id' => $existingCustomer->getId()]
+                    ),
+                    'method' => 'POST',
+                ]
+            );
+
+            $editForms[$existingCustomer->getId()] =
+                $editForm->createView();
+        }
+
+        return $this->render('customer/index.html.twig', [
+            'customers' => $customers,
+            'form' => $form->createView(),
+            'editForms' => $editForms,
+            'openAddCustomerModal' => $form->isSubmitted(),
+        ]);
     }
-
-    return $this->render('customer/index.html.twig', [
-        'customers' => $customers,
-        'form' => $form->createView(),
-        'editForms' => $editForms,
-        'openAddCustomerModal' => $form->isSubmitted(),
-    ]);
-}
-
 
     // ================= EDIT CUSTOMER =================
 
@@ -140,6 +176,13 @@ public function new(
         FormFactoryInterface $formFactory,
         CustomerRepository $customerRepository
     ): Response {
+        // Prevent Staff from editing someone else's customer
+        if (!$this->canManageCustomer($customer)) {
+            throw $this->createAccessDeniedException(
+                'You can only edit customers you created.'
+            );
+        }
+
         $form = $formFactory->createNamed(
             'customer_edit_' . $customer->getId(),
             CustomerType::class,
@@ -158,7 +201,10 @@ public function new(
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
 
-            $this->addFlash('success', 'Customer updated successfully.');
+            $this->addFlash(
+                'success',
+                'Customer updated successfully.'
+            );
 
             return $this->redirectToRoute(
                 'app_customer_index',
@@ -167,7 +213,7 @@ public function new(
             );
         }
 
-        // Return to Customer Management if editing fails
+        // Keep validation errors in the Edit Customer modal
         $customers = $customerRepository->findAll();
 
         $addForm = $this->createForm(
@@ -182,10 +228,13 @@ public function new(
         $editForms = [];
 
         foreach ($customers as $existingCustomer) {
+            if (!$this->canManageCustomer($existingCustomer)) {
+                continue;
+            }
+
             $id = $existingCustomer->getId();
 
             if ($id === $customer->getId()) {
-                // Keep the submitted form and its validation errors
                 $editForms[$id] = $form->createView();
             } else {
                 $otherForm = $formFactory->createNamed(
@@ -213,7 +262,6 @@ public function new(
         ]);
     }
 
-
     // ================= DELETE CUSTOMER =================
 
     #[Route('/{id}', name: 'app_customer_delete', methods: ['POST'])]
@@ -222,6 +270,13 @@ public function new(
         Customer $customer,
         EntityManagerInterface $entityManager
     ): Response {
+        // Prevent Staff from deleting someone else's customer
+        if (!$this->canManageCustomer($customer)) {
+            throw $this->createAccessDeniedException(
+                'You can only delete customers you created.'
+            );
+        }
+
         if ($this->isCsrfTokenValid(
             'delete' . $customer->getId(),
             $request->getPayload()->getString('_token')
@@ -229,7 +284,10 @@ public function new(
             $entityManager->remove($customer);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Customer deleted successfully.');
+            $this->addFlash(
+                'success',
+                'Customer deleted successfully.'
+            );
         }
 
         return $this->redirectToRoute(

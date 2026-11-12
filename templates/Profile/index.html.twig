@@ -1,0 +1,79 @@
+
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}My Profile | RideGo{% endblock %}
+
+{% block body %}
+
+<div class="page-header">
+    <div>
+        <h1>My Profile</h1>
+        <p>View and manage your account information.</p>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0" style="max-width: 750px;">
+    <div class="card-body p-4">
+
+        <h5 class="mb-4">Account Information</h5>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <strong>Full Name</strong>
+                <p>{{ user.fullName ?: 'Not provided' }}</p>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <strong>Username</strong>
+                <p>{{ user.username ?: 'Not provided' }}</p>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <strong>Email Address</strong>
+                <p>{{ user.email }}</p>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <strong>Role</strong>
+                <p>
+                    {% if 'ROLE_ADMIN' in user.roles %}
+                        Administrator
+                    {% else %}
+                        Staff
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <strong>Account Status</strong>
+                <p>
+                    {% if user.active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-danger">Disabled</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+            <div>
+                <h5 class="mb-1">Password & Security</h5>
+                <p class="text-muted mb-0">
+                    Keep your account secure by updating your password.
+                </p>
+            </div>
+
+            <a href="{{ path('app_change_password_page') }}"
+               class="btn"
+               style="background-color: #3C9995; color: white;">
+                Change Password
+            </a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

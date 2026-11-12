@@ -116,6 +116,9 @@
 
 {% for customer in customers %}
 
+    {% if is_granted('ROLE_ADMIN') or
+        (customer.createdBy and app.user and customer.createdBy.id == app.user.id) %}
+
 <div class="modal fade"
      id="editCustomerModal{{ customer.id }}"
      tabindex="-1"
@@ -208,6 +211,7 @@
     </div>
 </div>
 
+    {% endif %}
 {% endfor %}
 
 
@@ -237,44 +241,54 @@
                 <td>{{ customer.email }}</td>
                 <td>{{ customer.phoneNumber }}</td>
 
+                
                 <td>
                     <div class="actions">
 
-                        {# EDIT BUTTON #}
+                        {% if is_granted('ROLE_ADMIN') or
+                            (customer.createdBy and app.user and customer.createdBy.id == app.user.id) %}
 
-                        <button type="button"
-                                class="edit-btn"
-                                style="border: none; cursor: pointer;"
-                                data-bs-toggle="modal"
-                                data-bs-target="#editCustomerModal{{ customer.id }}">
-                            Edit
-                        </button>
-
-
-                        {# DELETE FORM #}
-
-                        <form method="post"
-                              action="{{ path('app_customer_delete', {'id': customer.id}) }}"
-                              id="customer-delete-form-{{ customer.id }}"
-                              style="display: inline-block; margin: 0;">
-
-                            <input type="hidden"
-                                   name="_token"
-                                   value="{{ csrf_token('delete' ~ customer.id) }}">
+                            {# EDIT BUTTON #}
 
                             <button type="button"
-                                    class="delete-btn"
+                                    class="edit-btn"
                                     style="border: none; cursor: pointer;"
-                                    data-customer-id="{{ customer.id }}"
-                                    data-customer-name="{{ customer.name|e('html_attr') }}"
-                                    onclick="openCustomerDeleteModal(this.dataset.customerId, this.dataset.customerName)">
-                                Delete
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editCustomerModal{{ customer.id }}">
+                                Edit
                             </button>
 
-                        </form>
+                            {# DELETE FORM #}
+
+                            <form method="post"
+                                action="{{ path('app_customer_delete', {'id': customer.id}) }}"
+                                id="customer-delete-form-{{ customer.id }}"
+                                style="display: inline-block; margin: 0;">
+
+                                <input type="hidden"
+                                    name="_token"
+                                    value="{{ csrf_token('delete' ~ customer.id) }}">
+
+                                <button type="button"
+                                        class="delete-btn"
+                                        style="border: none; cursor: pointer;"
+                                        data-customer-id="{{ customer.id }}"
+                                        data-customer-name="{{ customer.name|e('html_attr') }}"
+                                        onclick="openCustomerDeleteModal(this.dataset.customerId, this.dataset.customerName)">
+                                    Delete
+                                </button>
+
+                            </form>
+
+                        {% else %}
+
+                            <span class="text-muted small">View only</span>
+
+                        {% endif %}
 
                     </div>
                 </td>
+
             </tr>
 
         {% else %}

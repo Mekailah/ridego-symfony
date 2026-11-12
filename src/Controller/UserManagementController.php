@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 #[IsGranted('ROLE_ADMIN')]
 class UserManagementController extends AbstractController
@@ -155,6 +156,83 @@ class UserManagementController extends AbstractController
             'form' => $form->createView(),
             'user' => $user,
         ]);
+    }
+
+
+    #[Route(
+        '/admin/users/{id}/reset-password',
+        name: 'admin_users_reset_password',
+        methods: ['POST']
+    )]
+    public function resetPassword(
+        User $user,
+        Request $request,
+        UserPasswordHasherInterface $passwordHasher,
+        EntityManagerInterface $entityManager
+    ): Response {
+
+        // Verify CSRF token.
+        if (!$this->isCsrfTokenValid(
+            'reset_password_' . $user->getId(),
+            $request->request->getString('_token')
+        )) {
+            throw $this->createAccessDeniedException(
+                'Invalid CSRF token.'
+            );
+        }
+
+        // Prevent Admin from resetting their own password here.
+        // Admin should use My Profile > Change Password.
+        $currentUser = $this->getUser();
+
+        if (
+            $currentUser instanceof User
+            && $currentUser->getId() === $user->getId()
+        ) {
+            $this->addFlash(
+                'error',
+                'Use My Profile to change your own password.'
+            );
+
+            return $this->redirectToRoute('admin_users');
+        }
+
+        $newPassword = $request->request->getString('new_password');
+        $confirmPassword = $request->request->getString('confirm_password');
+
+        // Require at least 12 characters.
+        if (mb_strlen($newPassword) < 12) {
+            $this->addFlash(
+                'error',
+                'New password must contain at least 12 characters.'
+            );
+
+            return $this->redirectToRoute('admin_users');
+        }
+
+        // Verify password confirmation.
+        if ($newPassword !== $confirmPassword) {
+            $this->addFlash(
+                'error',
+                'New passwords do not match.'
+            );
+
+            return $this->redirectToRoute('admin_users');
+        }
+
+        // Hash and save the new password.
+        $user->setPassword(
+            $passwordHasher->hashPassword($user, $newPassword)
+        );
+
+        $entityManager->flush();
+
+        $this->addFlash(
+            'success',
+            'Password reset successfully for ' . $user->getFullName() . '.'
+        );
+
+        return $this->redirectToRoute('admin_users');
     }
 
     #[Route('/admin/users/{id}/delete', name: 'admin_users_delete', methods: ['POST'])]

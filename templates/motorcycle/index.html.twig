@@ -149,7 +149,7 @@
 {# ================= EDIT MOTORCYCLE MODALS ================= #}
 
 {% for motorcycle in motorcycles %}
-
+    {% if is_granted('ROLE_ADMIN') or motorcycle.createdBy == app.user %}
 <div class="modal fade"
      id="editMotorcycleModal{{ motorcycle.id }}"
      tabindex="-1"
@@ -258,7 +258,7 @@
         </div>
     </div>
 </div>
-
+    {% endif %}
 {% endfor %}
 
 
@@ -318,10 +318,11 @@
                 </td>
 
                 <td>
-                    <div class="actions">
+                    {% if is_granted('ROLE_ADMIN') or motorcycle.createdBy == app.user %}
+                        <div class="actions">
 
-                        <button type="button"
-                                class="edit-btn"
+                            <button type="button"
+                                    class="edit-btn"
                                 style="border: none; cursor: pointer;"
                                 data-bs-toggle="modal"
                                 data-bs-target="#editMotorcycleModal{{ motorcycle.id }}">
@@ -347,7 +348,10 @@
 
                         </form>
 
-                    </div>
+                        </div>
+                    {% else %}
+                        <span class="text-muted">View Only</span>
+                    {% endif %}
                 </td>
             </tr>
 

@@ -10,8 +10,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+#[IsGranted('ROLE_USER')]
 class MotorcycleController extends AbstractController
 {
     #[Route('/admin/motorcycles', name: 'admin_motorcycles', methods: ['GET', 'POST'])]
@@ -47,6 +48,8 @@ class MotorcycleController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $motorcycle->setCreatedBy($this->getUser());
+
             $this->saveMotorcycleImage($form->get('image')->getData(), $motorcycle);
 
             $entityManager->persist($motorcycle);
@@ -75,6 +78,8 @@ class MotorcycleController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $motorcycle->setCreatedBy($this->getUser());
+
             $this->saveMotorcycleImage($form->get('image')->getData(), $motorcycle);
 
             $entityManager->persist($motorcycle);
@@ -97,6 +102,16 @@ class MotorcycleController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager
     ): Response {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
+        if (
+            !$this->isGranted('ROLE_ADMIN') &&
+            $motorcycle->getCreatedBy() !== $this->getUser()
+        ) {
+            throw $this->createAccessDeniedException(
+                'You can only edit motorcycles you created.'
+            );
+        }
         $form = $this->createForm(MotorcycleType::class, $motorcycle);
         $form->handleRequest($request);
 
@@ -163,6 +178,16 @@ class MotorcycleController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager
     ): Response {
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
+        if (
+            !$this->isGranted('ROLE_ADMIN') &&
+            $motorcycle->getCreatedBy() !== $this->getUser()
+        ) {
+            throw $this->createAccessDeniedException(
+                'You can only delete motorcycles you created.'
+            );
+        }
         if ($this->isCsrfTokenValid(
             'delete'.$motorcycle->getId(),
             $request->request->get('_token')

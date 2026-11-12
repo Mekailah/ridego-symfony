@@ -561,6 +561,16 @@ body.sidebar-collapsed .main-content {
            class="{{ app.request.attributes.get('_route') starts with 'app_payment_' ? 'active' : '' }}">
             Payments
         </a>
+        
+        <a href="{{ path('app_profile') }}"
+        class="{{ app.request.attributes.get('_route') in [
+            'app_profile',
+            'app_change_password_page',
+            'app_change_password'
+        ] ? 'active' : '' }}">
+            My Profile
+        </a>
+
 
     </nav>
 
