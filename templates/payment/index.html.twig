@@ -19,36 +19,6 @@
     </div>
 {% endfor %}
 
-{# ================= TOM SELECT STYLES ================= #}
-
-<link
-    href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.bootstrap5.min.css"
-    rel="stylesheet"
->
-
-<style>
-    .ts-wrapper.single .ts-control {
-        min-height: 42px;
-        border-radius: 6px;
-        padding: 9px 12px;
-    }
-
-    .ts-wrapper.focus .ts-control {
-        border-color: #3C9995;
-        box-shadow: 0 0 0 0.2rem rgba(60, 153, 149, 0.18);
-    }
-
-    .ts-dropdown {
-        z-index: 1060;
-    }
-
-    .payment-amount-note {
-        font-size: 13px;
-        color: #6b7280;
-        margin-top: 6px;
-    }
-</style>
-
 
 {# ================= PAGE HEADER ================= #}
 
@@ -58,140 +28,12 @@
         <p>Manage motorcycle rental payments.</p>
     </div>
 
-    <button
-        type="button"
-        class="add-btn"
-        style="border: none; cursor: pointer;"
-        data-bs-toggle="modal"
-        data-bs-target="#addPaymentModal"
-    >
-        + Add Payment
-    </button>
 </div>
-
-
-{# ================= ADD PAYMENT MODAL ================= #}
-
-<div
-    class="modal fade"
-    id="addPaymentModal"
-    tabindex="-1"
-    aria-labelledby="addPaymentModalLabel"
-    aria-hidden="true"
->
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title" id="addPaymentModalLabel">
-                    Add Payment
-                </h5>
-
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                ></button>
-            </div>
-
-            {{ form_start(form) }}
-
-            <div class="modal-body">
-                {{ form_errors(form) }}
-
-                {# ========== SEARCHABLE BOOKING ========== #}
-
-                <div class="mb-3">
-                    {{ form_label(form.booking, 'Booking') }}
-
-                    {{ form_widget(form.booking, {
-                        'attr': {
-                            'class': 'form-select searchable-booking'
-                        }
-                    }) }}
-
-                    {{ form_errors(form.booking) }}
-                </div>
-
-                {# ========== AUTOMATIC AMOUNT ========== #}
-
-                <div class="mb-3">
-                    {{ form_label(form.amount, 'Amount (PHP)') }}
-
-                    {{ form_widget(form.amount, {
-                        'attr': {
-                            'class': 'form-control',
-                            'readonly': 'readonly',
-                            'placeholder': 'Select a booking first'
-                        }
-                    }) }}
-
-                    {{ form_errors(form.amount) }}
-
-                    <div
-                        id="paymentAmountNote"
-                        class="payment-amount-note"
-                        aria-live="polite"
-                    >
-                        Select a booking to fill in the rental total.
-                    </div>
-                </div>
-
-                {# ========== PAYMENT METHOD ========== #}
-
-                <div class="mb-3">
-                    {{ form_label(form.paymentMethod, 'Payment Method') }}
-
-                    {{ form_widget(form.paymentMethod, {
-                        'attr': {'class': 'form-select'}
-                    }) }}
-
-                    {{ form_errors(form.paymentMethod) }}
-                </div>
-
-                {# ========== PAYMENT STATUS ========== #}
-
-                <div class="mb-3">
-                    {{ form_label(form.paymentStatus, 'Payment Status') }}
-
-                    {{ form_widget(form.paymentStatus, {
-                        'attr': {'class': 'form-select'}
-                    }) }}
-
-                    {{ form_errors(form.paymentStatus) }}
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button
-                    type="button"
-                    class="btn btn-secondary"
-                    data-bs-dismiss="modal"
-                >
-                    Cancel
-                </button>
-
-                <button
-                    type="submit"
-                    class="btn"
-                    style="background-color: #3C9995; color: white; border: none;"
-                >
-                    Save Payment
-                </button>
-            </div>
-
-            {{ form_rest(form) }}
-            {{ form_end(form, {'render_rest': false}) }}
-
-        </div>
-    </div>
-</div>
-
 
 {# ================= EDIT PAYMENT MODALS ================= #}
 
 {% for payment in payments %}
+    {% if editForms[payment.id] is defined %}   
 
 <div
     class="modal fade"
@@ -230,12 +72,17 @@
                         'Booking'
                     ) }}
 
-                    {{ form_widget(
-                        editForms[payment.id].booking,
-                        {'attr': {'class': 'form-select'}}
-                    ) }}
+                    <input
+                        type="text"
+                        class="form-control"
+                        value="Booking #{{ payment.booking.id }} — {{ payment.booking.customerName }} — {{ payment.booking.motorcycleName }}"
+                        readonly
+                    >
 
                     {{ form_errors(editForms[payment.id].booking) }}
+                    <div class="d-none">
+                        {{ form_widget(editForms[payment.id].booking) }}
+                    </div>
                 </div>
 
                 <div class="mb-3">
@@ -305,7 +152,7 @@
         </div>
     </div>
 </div>
-
+    {% endif %}
 {% endfor %}
 
 
@@ -369,6 +216,8 @@
                 </td>
 
                 <td>
+
+                {% if editForms[payment.id] is defined %}
                     <div class="actions">
 
                         {# ========== EDIT PAYMENT ========== #}
@@ -409,12 +258,16 @@
                         </form>
 
                     </div>
+
+                {% else %}
+                    <span class="text-muted small">View only</span>
+                {% endif %}
                 </td>
             </tr>
 
         {% else %}
             <tr>
-                <td colspan="7" class="text-center">
+                <td colspan="8" class="text-center">
                     No payments found.
                 </td>
             </tr>
@@ -458,10 +311,6 @@
 </div>
 
 
-{# ================= TOM SELECT LIBRARY ================= #}
-
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
-
 
 {# ================= JAVASCRIPT ================= #}
 
@@ -491,107 +340,7 @@
         }
     }
 
-
-    // Booking totals come from the existing Symfony form choices.
-    // This includes the real database booking IDs and totals.
-
-    const bookingTotals = {
-        {% for choice in form.booking.vars.choices %}
-            {{ choice.value|json_encode|raw }}:
-            {{ choice.data.totalAmount|default(null)|json_encode|raw }}
-            {% if not loop.last %},{% endif %}
-        {% endfor %}
-    };
-
-
     document.addEventListener('DOMContentLoaded', function () {
-
-        // ========== SEARCHABLE BOOKING DROPDOWN ==========
-
-        const bookingSelect = document.getElementById('payment_booking');
-        const amountInput = document.getElementById('payment_amount');
-        const amountNote = document.getElementById('paymentAmountNote');
-
-        function updatePaymentAmount() {
-            if (!bookingSelect || !amountInput) {
-                return;
-            }
-
-            const selectedBooking = bookingSelect.value;
-
-            if (!selectedBooking) {
-                amountInput.value = '';
-
-                if (amountNote) {
-                    amountNote.textContent =
-                        'Select a booking to fill in the rental total.';
-                }
-
-                return;
-            }
-
-            const total = bookingTotals[selectedBooking];
-
-            if (total === null || total === undefined || total === '') {
-                amountInput.value = '';
-
-                if (amountNote) {
-                    amountNote.textContent =
-                        'This older booking has no rental total. Full payment cannot be recorded until its total is assigned.';
-                }
-
-                return;
-            }
-
-            amountInput.value = Number(total).toFixed(2);
-
-            if (amountNote) {
-                amountNote.textContent =
-                    'Full rental amount: ₱' +
-                    Number(total).toLocaleString('en-PH', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    });
-            }
-        }
-
-        if (bookingSelect) {
-
-            if (typeof TomSelect !== 'undefined') {
-                new TomSelect(bookingSelect, {
-                    create: false,
-                    allowEmptyOption: true,
-                    maxOptions: 1000,
-                    searchField: ['text'],
-                    placeholder: 'Search or select a booking...',
-                    onChange: function () {
-                        updatePaymentAmount();
-                    }
-                });
-            }
-
-            // Also works if the library fails to load.
-            bookingSelect.addEventListener(
-                'change',
-                updatePaymentAmount
-            );
-
-            // Preserve the selected booking on validation errors.
-            updatePaymentAmount();
-        }
-
-
-        // ========== REOPEN ADD MODAL ON VALIDATION ERROR ==========
-
-        {% if openAddPaymentModal is defined and openAddPaymentModal %}
-            const addModalElement =
-                document.getElementById('addPaymentModal');
-
-            if (addModalElement && typeof bootstrap !== 'undefined') {
-                new bootstrap.Modal(addModalElement).show();
-            }
-        {% endif %}
-
 
         // ========== REOPEN EDIT MODAL ON VALIDATION ERROR ==========
 

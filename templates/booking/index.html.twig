@@ -270,7 +270,17 @@
                 {# ACTIONS #}
 
                 <td>
-                    {% if booking.status == 'Pending' %}
+                    {% set canManageBooking = is_granted('ROLE_ADMIN')
+                        or (
+                            app.user
+                            and booking.createdBy
+                            and booking.createdBy.id == app.user.id
+                        )
+                    %}
+
+                    {% if canManageBooking %}
+
+                        {% if booking.status == 'Pending' %}
 
                         <div class="booking-actions">
 
@@ -350,6 +360,11 @@
                         </form>
 
                     {% endif %}
+
+                {% else %}
+                    <span class="text-muted small">View only</span>
+                {% endif %}
+
                 </td>
             </tr>
 

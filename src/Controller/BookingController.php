@@ -12,9 +12,24 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Entity\User;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+#[IsGranted('ROLE_USER')]
 class BookingController extends AbstractController
 {
+    private function canManageBooking(Booking $booking): bool
+{
+    if ($this->isGranted('ROLE_ADMIN')) {
+            return true;
+        }
+
+        $user = $this->getUser();
+
+        return $user instanceof User
+            && $booking->getCreatedBy() !== null
+            && $booking->getCreatedBy()->getId() === $user->getId();
+    }
     #[Route('/admin/bookings', name: 'admin_bookings', methods: ['GET'])]
     public function index(EntityManagerInterface $entityManager): Response
     {
@@ -43,6 +58,12 @@ class BookingController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager
     ): Response {
+        if (!$this->canManageBooking($booking)) {
+            throw $this->createAccessDeniedException(
+                'You can only manage bookings you created.'
+            );
+        }
+
         if (!$this->isCsrfTokenValid(
             'confirm' . $booking->getId(),
             $request->request->get('_token')
@@ -115,6 +136,11 @@ class BookingController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager
     ): Response {
+        if (!$this->canManageBooking($booking)) {
+            throw $this->createAccessDeniedException(
+                'You can only return bookings you created.'
+            );
+        }
         if (!$this->isCsrfTokenValid(
             'return' . $booking->getId(),
             $request->request->get('_token')
@@ -178,6 +204,11 @@ class BookingController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager
     ): Response {
+        if (!$this->canManageBooking($booking)) {
+            throw $this->createAccessDeniedException(
+                'You can only delete bookings you created.'
+            );
+        }
         if (!$this->isCsrfTokenValid(
             'delete' . $booking->getId(),
             $request->request->get('_token')
@@ -226,7 +257,18 @@ class BookingController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $customer = $booking->getCustomer();
+
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException(
+                'You must be logged in to create bookings.'
+            );
+        }
+
+        $booking->setCreatedBy($user);
+
+        $customer = $booking->getCustomer();
 
             if (!$customer) {
                 return $this->bookingError(

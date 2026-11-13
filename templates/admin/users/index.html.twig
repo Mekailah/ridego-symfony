@@ -54,6 +54,7 @@
                 <th>Full Name</th>
                 <th>Username</th>
                 <th>Email</th>
+                <th>Date Created</th>
                 <th>Role</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -67,6 +68,7 @@
                     <td>{{ user.fullName ?: '—' }}</td>
                     <td>{{ user.username ?: '—' }}</td>
                     <td>{{ user.email }}</td>
+                    <td>{{ user.createdAt ? user.createdAt|date('M d, Y') : 'Not recorded' }}</td>
 
                     <td>
                         {% if 'ROLE_ADMIN' in user.roles %}
@@ -128,7 +130,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="7" style="text-align: center;">
+                    <td colspan="8" style="text-align: center;">
                         No registered users found.
                     </td>
                 </tr>
@@ -531,21 +533,35 @@
 
     /* USER TABLE */
 
+    .table-container {
+        overflow-x: auto;
+    }
+
     .users-table {
         table-layout: fixed;
         width: 100%;
+        min-width: 1100px;
     }
 
     .users-table th:nth-child(1) { width: 5%; }
-    .users-table th:nth-child(2) { width: 15%; }
-    .users-table th:nth-child(3) { width: 13%; }
-    .users-table th:nth-child(4) { width: 22%; }
-    .users-table th:nth-child(5) { width: 9%; }
-    .users-table th:nth-child(6) { width: 9%; }
-    .users-table th:nth-child(7) { width: 27%; }
+    .users-table th:nth-child(2) { width: 14%; }
+    .users-table th:nth-child(3) { width: 12%; }
+    .users-table th:nth-child(4) { width: 20%; }
+    .users-table th:nth-child(5) { width: 12%; }
+    .users-table th:nth-child(6) { width: 8%; }
+    .users-table th:nth-child(7) { width: 9%; }
+    .users-table th:nth-child(8) { width: 20%; }
 
+    .users-table th,
     .users-table td {
+        height: auto;
+        vertical-align: middle;
+        padding: 12px 10px;
         overflow-wrap: anywhere;
+    }
+
+    .users-table tbody tr {
+        height: auto;
     }
 
     /* ACTION BUTTONS */
@@ -786,6 +802,25 @@
         font-weight: 600;
         padding: 10px 18px;
     }
+
+    /* Keep all action buttons on one line */
+.users-table th:last-child,
+.users-table td:last-child {
+    width: 330px !important;
+    min-width: 330px !important;
+}
+
+.table-container .actions {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.table-container {
+    overflow-x: auto;
+}
 
 </style>
 
